@@ -16,4 +16,9 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
+
+  #gem.add_dependency 'awestruct', '>= 0.5.1'
+
+  gem.add_development_dependency 'guard-rspec', '~> 3.0.0'
+  gem.add_development_dependency 'rake', '~> 10.0.4'
 end
