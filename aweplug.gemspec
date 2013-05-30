@@ -8,9 +8,11 @@ Gem::Specification.new do |gem|
   gem.version       = Aweplug::VERSION
   gem.authors       = ["LightGuard"]
   gem.email         = ["lightguard.jp@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
-  gem.homepage      = ""
+  gem.description   = %q{A set of Awestruct extensions for building a project website}
+  gem.summary       = %q{This set of Awestruct extensions includes helpful tools,
+                         extensions and helpers for building a website using Awestruct.
+                         It includes extensions for accessing Github, JIRA, managing identities and others.}
+  gem.homepage      = "https://github.com/awestruct/aweplug"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
