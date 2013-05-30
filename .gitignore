@@ -20,3 +20,4 @@ doc/
 .bundle
 vendor/bundle
 vendor/cache
+pkg
