@@ -5,7 +5,7 @@ require 'guard'
 
 GEMFILE = "aweplug-#{Aweplug::VERSION}.gem"
 
-task :default => :build 
+task :default => :build
 
 desc "Run all tests and build the gem"
 task :build => 'test:spec' do
@@ -16,12 +16,12 @@ desc "Build and install the gem locally"
 task :install => :build do
   system "gem install -l -f #{GEMFILE}"
 end
- 
+
 namespace :release do
   desc "Release the gem to rubygems"
   task :push => [ :build, :tag ] do
     system "gem push #{GEMFILE}"
-  end 
+  end
 
   desc "Create tag #{Aweplug::VERSION} in git"
   task :tag do
@@ -35,14 +35,17 @@ namespace :test do
   else
     desc "Run all specifications"
     RSpec::Core::RakeTask.new(:spec) do |t|
-      t.pattern = 'spec/*_spec.rb'
+      t.pattern = 'spec/**/*_spec.rb'
     end
   end
 
   desc "Start Guard to listen for changes and run specs"
-  task :guard do 
-    Guard.setup
+  task :guard do
     Guard.start(:guardfile => 'Guardfile')
+    Guard.run_all
+    while ::Guard.running do
+      sleep 0.5
+    end
   end
 end
 
