@@ -1,6 +1,6 @@
 require 'asciidoctor'
 
-module Awestruct
+module Aweplug
   module Extensions
     # Public: Parses (AsciiDoc files currently) and pulls out h2 sections
     # (and their contents), setting them as first class page variables.
