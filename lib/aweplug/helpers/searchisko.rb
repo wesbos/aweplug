@@ -1,6 +1,5 @@
 require 'faraday'
 require 'faraday_middleware' 
-require 'pry' # Allow for debugging
 
 module Aweplug::Helpers
   # Public: A helper class for using Searchisko.
@@ -44,12 +43,11 @@ module Aweplug::Helpers
     end
 
     def post path, params = {}
-      response = @faraday.post do |req|
+      @faraday.post do |req|
         req.url "/v1/rest/" + path
         req.headers['Content-Type'] = 'application/json'
         req.body = params
       end
-      binding.pry # Allow for debugging
     end
   end
 end

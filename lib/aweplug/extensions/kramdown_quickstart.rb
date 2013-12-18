@@ -43,7 +43,7 @@ module Aweplug
               :tags => metadata[:technologies].split(/,\s/),
               :sys_description => metadata[:summary],
               :sys_content => converted_html, 
-              :sys_url_view => "#{site.base_url}#{'/' + site.ctx_root + '/'}#{page.output_path}",
+              :sys_url_view => "#{site.base_url}#{site.ctx_root.nil? ? '/' : '/' + site.ctx_root + '/'}#{page.output_path}",
               :"sys_content_content-type" => 'text/html',
               :sys_type => 'jbossdeveloper_quickstart',
               :sys_content_type => 'quickstart',
