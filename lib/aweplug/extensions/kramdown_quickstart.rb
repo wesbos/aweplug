@@ -24,7 +24,6 @@ module Aweplug
                                                          :authenticate => true, 
                                                          :searchisko_username => ENV['dcp_user'], 
                                                          :searchisko_password => ENV['dcp_password'], 
-                                                         #:adapter => :excon,
                                                          :logger => site.profile == 'developement'})
           Dir["#{@repo}/**/README.md"].each do |file|
             page = add_to_site site, file
