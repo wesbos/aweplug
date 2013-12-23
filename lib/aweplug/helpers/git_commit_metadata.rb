@@ -13,7 +13,7 @@ module Aweplug
           #
           # Returns an array of commit info as json values
           def commit_info(repo_root, file_path)
-            o, _ = Open3.capture2(%Q[git --git-dir=#{repo_root}/.git log --date=iso --format='{"author":"%an","date":"%ai"}' -- #{file_path.to_s.sub(/#{repo_root}\//, '')}])
+            o, _ = Open3.capture2(%Q[git --git-dir=#{repo_root}/.git log --date=iso --format='{"author":"%an","date":"%ai","hash":"%h","subject":"%f"}' -- #{file_path.to_s.sub(/#{repo_root}\//, '')}])
             o.split("\n").map{ |l| JSON.parse l, :symbolize_names => true }
           end
         end
