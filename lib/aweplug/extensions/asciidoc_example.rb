@@ -57,7 +57,7 @@ module Aweplug::Extensions
           :sys_type => 'jbossdeveloper_example',
           :sys_content_type => 'example',
           :sys_content_provider => 'jboss-developer',
-          :contributors => metadata[:commits].collect { |c| c[:author] }.uniq,
+          :contributors => metadata[:commits].collect { |c| c[:author] }.unshift(metadata[:author]).uniq,
           :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
           :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
           :sys_updated => metadata[:commits].collect { |c| DateTime.parse c[:date] }.first
