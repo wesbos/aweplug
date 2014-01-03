@@ -13,9 +13,9 @@ module Aweplug
 
         case (path)
         when Pathname
-          @path = path
+          @path = Pathname.new(File.join site.dir, 'synthetic', path)
         else
-          @path = Pathname.new(path.to_s)
+          @path = Pathname.new(File.join site.dir, 'synthetic', path.to_s)
         end
       end
 
@@ -26,6 +26,24 @@ module Aweplug
       def rendered_content(context, with_layouts)
         @content
       end 
+
+      def raw_content
+        @content
+      end
+
+      def relative_source_path 
+        # Copied from file_handler.rb in awestruct
+        begin
+          p = @path.relative_path_from( site.dir ) 
+          if !! ( %r(^\.\.) =~ p.to_s )
+            return nil 
+          end
+          r = File.join( '', p )
+          return r
+        rescue Exception=>e
+          nil
+        end
+      end
     end
   end
 end
