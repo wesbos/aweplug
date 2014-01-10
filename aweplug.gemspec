@@ -23,6 +23,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'octokit', '>= 1.24.0'
   gem.add_dependency 'faraday', '>= 0.8.7'
   gem.add_dependency 'faraday_middleware', '>= 0.9.0'
+  gem.add_dependency 'curb', '~> 0.8.5'
+  gem.add_dependency 'oauth', '~> 0.3.6'
 
   gem.add_development_dependency 'guard-rspec', '~> 3.0.0'
   gem.add_development_dependency 'rake', '~> 10.0.4'
