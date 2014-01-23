@@ -1,25 +1,73 @@
 require 'pathname'
 require 'asciidoctor'
-require 'aweplug/helpers/git_commit_metadata'
+require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/searchisko'
 require 'json'
 require 'pry'
 
 module Aweplug::Extensions
+  # Public: An awestruct extension for guides / examples written in AsciiDoc.
+  #         Files with the .asciidoc or .adoc extension are considered to be
+  #         AsciiDoc files. This extension makes use of asciidoctor to 
+  #         render the files.
+  #
+  # Example
+  #
+  #   extension Aweplug::Extensions::AsciidocExample({...})
   class AsciidocExample 
     include Aweplug::Helper::Git::Commit::Metadata
+    include Aweplug::Helper::Git::Repository
 
-    def initialize(repository, directory, layout, output_dir, additional_excludes = [], 
-                   recurse_subdirectories = true, additional_metadata_keys = [])
-      @repo = repository
-      @output_dir = Pathname.new output_dir
-      @layout = layout
-      @recurse_subdirectories = recurse_subdirectories
-      @additional_metadata_keys = additional_metadata_keys
-      @additional_excludes = additional_excludes
-      @directory = File.join repository, directory
+    # Public: Initialization method, used in the awestruct pipeline.
+    #
+    # opts - A Hash of options, some being required, some not (default: {}). 
+    #        :repository               - The String name of the directory 
+    #                                    containing the repository (required).
+    #        :directory                - The String directory name, within the
+    #                                    :respository, containing the files 
+    #                                    (required).
+    #        :layout                   - The String name of the layout to use, 
+    #                                    omitting the extension (required).
+    #        :output_dir               - The String or Pathname of the output 
+    #                                    directory for the files (required).
+    #        :additional_excludes      - An Array of Strings containing 
+    #                                    additional base file names to exclude 
+    #                                    (default: []).
+    #        :recurse_subdirectories   - Boolean flag indicating to continue 
+    #                                    searching subdirectories (default: 
+    #                                    true).
+    #        :additional_metadata_keys - An Array of String keys from the 
+    #                                    AsciiDoc metadata to include in the 
+    #                                    searchisko payload (default: []).
+    #        :site_variable            - String name of the key within the site
+    #                                    containing additional metadata about 
+    #                                    the guide (default: value of 
+    #                                    :output_dir).
+    # Returns the created extension.
+    def initialize(opts = {})
+      required_keys = [:repository, :directory, :layout, :output_dir, :site_variable]
+      opts = {additional_excludes: [], recurse_subdirectories: true, 
+              additional_metadata_keys: [], site_variable: opts[:output_dir]}.merge opts
+      missing_required_keys = required_keys - opts.keys
+
+      raise ArgumentError.new "Missing required arguments #{missing_required_keys.join ', '}" unless missing_required_keys.empty?
+
+      @repo = opts[:repository]
+      @output_dir = Pathname.new opts[:output_dir]
+      @layout = opts[:layout]
+      @recurse_subdirectories = opts[:recurse_subdirectories]
+      @additional_metadata_keys = opts[:additional_metadata_keys]
+      @additional_excludes = opts[:additional_excludes]
+      @directory = File.join opts[:repository], opts[:directory]
+      @site_variable = opts[:site_variable]
     end
 
+    # Internal: Execute method required by awestruct. Called during the
+    # pipeline execution. No return.
+    #
+    # site - The site instance from awestruct.
+    #
+    # Returns nothing.
     def execute site
       searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                                      :authenticate => true, 
@@ -41,6 +89,7 @@ module Aweplug::Extensions
         metadata = {:author => doc.author, :commits => commit_info(@repo, path), 
                     :title => doc.doctitle, :tags => doc.attributes['tags'],
                     :toc => doc.sections.inject([]) {|result, elm| result << {:id => elm.id, :text => elm.title}; result},
+                    :github_repo_url => repository_url(@repo),
                     # Will need to strip html tags for summary
                     :summary => doc.sections.first.render}
 

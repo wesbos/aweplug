@@ -1,6 +1,6 @@
 require 'pathname'
 require 'kramdown'
-require 'aweplug/helpers/git_commit_metadata'
+require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
 require 'json'
@@ -8,15 +8,49 @@ require 'json'
 module Aweplug
   module Extensions
     module Kramdown
+      # Public: An awestruct extension for guides / examples written in AsciiDoc.
+      #         Files with the .asciidoc or .adoc extension are considered to be
+      #         AsciiDoc files. This extension makes use of asciidoctor to 
+      #         render the files.
+      #
+      # Example
+      #
+      #   extension Aweplug::Extensions::AsciidocExample({...})
       class Quickstart
         include Aweplug::Helper::Git::Commit::Metadata
+        include Aweplug::Helper::Git::Repository
 
-        def initialize repository, layout, output_dir
-          @repo = repository
-          @output_dir = Pathname.new output_dir
-          @layout = layout
+        # Public: Initialization method, used in the awestruct pipeline.
+        #
+        # opts - A Hash of options, some being required, some not (default: {}). 
+        #        :repository    - The String name of the directory containing 
+        #                         the repository (required).
+        #        :layout        - The String name of the layout to use, 
+        #                         omitting the extension (required).
+        #        :output_dir    - The String or Pathname of the output 
+        #                         directory for the files (required).
+        #        :site_variable - String name of the key within the site
+        #                         containing additional metadata about 
+        #                         the guide (default: value of 
+        #                         :output_dir).
+        # Returns the created extension.
+        def initialize opts = {}
+          required_keys = [:repository, :layout, :output_dir, :site_variable]
+          missing_required_keys = required_keys - opts.keys
+
+          raise ArgumentError.new "Missing required arguments #{missing_required_keys.join ', '}" unless missing_required_keys.empty?
+          @repo = opts[:repository]
+          @output_dir = Pathname.new opts[:output_dir]
+          @layout = opts[:layout]
+          @site_variable = opts[:site_variable] || opts[:output_dir]
         end
 
+        # Internal: Execute method required by awestruct. Called during the
+        # pipeline execution. No return.
+        #
+        # site - The Site instance from awestruct.
+        #
+        # Returns nothing.
         def execute site
           # Not sure if it's better to do this once per class, 
           # once per site, or once per invocation
@@ -30,6 +64,7 @@ module Aweplug
 
             metadata = extract_metadata(file)
             metadata[:commits] = commit_info @repo, Pathname.new(file)
+            metadata[:github_repo_url] = repository_url @repo
             converted_html = metadata.delete :converted
 
             page.send 'metadata=', metadata
@@ -62,6 +97,15 @@ module Aweplug
           end
         end
 
+
+        private
+
+        # Private: Makes use of the sepcial Kramdown parser in aweplug to pull 
+        # out metadata from the README files.
+        # 
+        # file - The String file path (relative or absolute) to parse.
+        #
+        # Returns a Hash of the metadata retrieved.
         def extract_metadata(file)
           document = parse_kramdown(file)
           toc = ::Kramdown::Converter::Toc.convert(document.root)
@@ -75,6 +119,12 @@ module Aweplug
           metadata
         end
 
+        # Private: Adds the Page to the site.
+        #
+        # site - The Site from awestruct.
+        # file - The String file path (relative or absolute) to parse.
+        # 
+        # Returns the newly constructed Page
         def add_to_site(site, file)
           page_path = Pathname.new file
           page = site.engine.load_site_page file
@@ -84,8 +134,11 @@ module Aweplug
           page
         end
 
-        private
-
+        # Private: Parses the file through Kramdown.
+        #
+        # file - The String file path (relative or absolute) to parse.
+        #
+        # Returns the parsed Kramdown Document.
         def parse_kramdown(file)
           ::Kramdown::Document.new File.readlines(file).join, :input => 'QuickStartParser' 
         end
