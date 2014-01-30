@@ -35,7 +35,7 @@ module Aweplug
         #                         :output_dir).
         # Returns the created extension.
         def initialize opts = {}
-          required_keys = [:repository, :layout, :output_dir, :site_variable]
+          required_keys = [:repository, :layout, :output_dir]
           missing_required_keys = required_keys - opts.keys
 
           raise ArgumentError.new "Missing required arguments #{missing_required_keys.join ', '}" unless missing_required_keys.empty?
