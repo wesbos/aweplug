@@ -1,6 +1,6 @@
 require 'yaml/store'
 
-module Aweplug
+module Aweplug::Cache
   # Public: A simple caching implementation.
   #         Internally it using a YAML::Store for a file backing. It also saves
   #         data in a hash for the life of the object. Any keys which are 
@@ -14,7 +14,7 @@ module Aweplug
     #
     # Examples
     #
-    #   store = Aweplug::YamlFileCache.new
+    #   store = Aweplug::Cache::YamlFileCache.new
     #   store.write('key', 'data')
     #   # => 'data'
     #   store.read('key')

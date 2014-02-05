@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'aweplug/cache/yaml_file_cache'
 
-describe Aweplug::YamlFileCache do
+describe Aweplug::Cache::YamlFileCache do
   specify 'it should respond to #write' do
     expect(subject).to respond_to :write
   end
@@ -12,7 +12,7 @@ describe Aweplug::YamlFileCache do
     expect(subject).to respond_to :read
   end
   context 'with a new instance' do
-    subject = Aweplug::YamlFileCache.new 
+    subject = Aweplug::Cache::YamlFileCache.new 
     # destroy any file stores
     before { File.delete 'tmp/cache.store' if File.exists? 'tmp/cache.store' }
 

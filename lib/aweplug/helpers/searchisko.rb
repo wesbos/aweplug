@@ -1,5 +1,6 @@
 require 'faraday'
 require 'faraday_middleware' 
+require 'aweplug/cache/yaml_file_cache'
 
 module Aweplug::Helpers
   # Public: A helper class for using Searchisko.
@@ -27,6 +28,7 @@ module Aweplug::Helpers
         end
         builder.response :logger if opts[:logging]
         builder.response :raise_error if opts[:raise_error]
+        builder.use FaradayMiddleware::Caching, Aweplug::Cache::YamlFileCache.new, {}
         #builder.response :json, :content_type => /\bjson$/
         builder.adapter opts[:adapter] || :net_http
       end
