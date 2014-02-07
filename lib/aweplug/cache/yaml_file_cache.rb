@@ -1,4 +1,5 @@
 require 'yaml/store'
+require 'fileutils'
 
 module Aweplug::Cache
   # Public: A simple caching implementation.
@@ -23,6 +24,7 @@ module Aweplug::Cache
     # Returns a new instance of the cache.
     def initialize(opts = {})
       opts.merge!({filename: 'tmp/cache.store'})
+      FileUtils.mkdir_p(File.dirname opts[:filename])
       @file_store = YAML::Store.new opts[:filename]
       @memory_store = {}
     end
