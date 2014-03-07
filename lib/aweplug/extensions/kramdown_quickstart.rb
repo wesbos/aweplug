@@ -33,6 +33,8 @@ module Aweplug
         #                         containing additional metadata about 
         #                         the guide (default: value of 
         #                         :output_dir).
+        #        :excludes     -  Array of Strings containing additional 
+        #                         directory names to exclude. Defaults to [].
         # Returns the created extension.
         def initialize opts = {}
           required_keys = [:repository, :layout, :output_dir]
@@ -43,6 +45,7 @@ module Aweplug
           @output_dir = Pathname.new opts[:output_dir]
           @layout = opts[:layout]
           @site_variable = opts[:site_variable] || opts[:output_dir]
+          @excludes = opts[:excludes] || []
         end
 
         # Internal: Execute method required by awestruct. Called during the
@@ -60,6 +63,8 @@ module Aweplug
                                                          :searchisko_password => ENV['dcp_password'], 
                                                          :logger => site.profile == 'developement'})
           Dir["#{@repo}/**/README.md"].each do |file|
+            next if @excludes.include?(File.dirname(file))
+            
             page = add_to_site site, file
 
             metadata = extract_metadata(file)

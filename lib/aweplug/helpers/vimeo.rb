@@ -59,11 +59,12 @@ module Aweplug
       #
       # full_name - the full name, e.g. Pete Muir
       def first_name(full_name)
-        full_name.split[0]
+        full_name.split[0] || full_name
       end
 
       # Internal: Data object to hold and parse values from the Vimeo API.
       class Video 
+        include Aweplug::Helpers::Vimeo
         def initialize(url, access_token, site)
           @id = url.match(/^.*\/(\d*)$/)[1]
           @site = site
@@ -106,23 +107,42 @@ module Aweplug
               end
             end
           end
-          out
+          out || ''
         end
 
         def author
           if @cast[0]
             @cast[0]
           else
-            @cast = Openstruct.new({"realname" => "Unknown"})
+            @cast = OpenStruct.new({"realname" => "Unknown"})
           end
         end
 
         def cast
-          @cast
+          @cast || ''
+        end
+
+        def modified_date
+          if @video["upload_date"]
+            DateTime.parse(@video["upload_date"]).strftime("%F %T")
+          else
+            "UNKOWN DATE"
+          end
+        end
+
+        def tags
+          if @video['tags'].is_a? Hash
+            @video['tags']['tag'].inject([]) do |result, element|
+              result << element['normalized']
+              result
+            end
+          else
+            ''
+          end
         end
 
         def thumb_url
-          @thumb["_content"]
+          @thumb["_content"] || ''
         end
 
         def fetch_info
@@ -135,22 +155,27 @@ module Aweplug
         end
 
         def fetch_thumb_url
-          body = exec_method "vimeo.videos.getThumbnailUrls", @id
-          if body
-            @thumb = JSON.parse(body)["thumbnails"]["thumbnail"][1]
+          if @video['thumbnails']
+            @thumb = @video["thumbnails"]["thumbnail"][1]
           else
             @thumb = {"_content" => ""}
           end
         end
 
         def fetch_cast
-          body = exec_method "vimeo.videos.getCast", @id
           @cast = []
-          if body
-            JSON.parse(body)["cast"]["member"].each do |c|
-              o = OpenStruct.new(c)
-              if o.username != "jbossdeveloper"
-                @cast << o
+          if @video['cast']
+            cast = @video["cast"]
+            if cast['total'] != '1'
+              cast["member"].each do |c|
+                o = OpenStruct.new(c)
+                if o.username != "jbossdeveloper"
+                  @cast << o
+                end
+              end 
+            else
+              if cast['member']['username'] != 'jbossdeveloper'
+                @cast << OpenStruct.new(cast['member'])
               end
             end
           end
@@ -163,44 +188,28 @@ module Aweplug
         #
         # Returns JSON retreived from the Vimeo API
         def exec_method(method, video_id)
+          # TODO: Look at switching this to faraday
           if access_token
             query = "http://vimeo.com/api/rest/v2?method=#{method}&video_id=#{video_id}&format=json"
             access_token.get(query).body
           end
         end
+      end
 
-        # Internal: Obtains an OAuth::AcccessToken for the Vimeo API, using the 
-        # vimeo_client_id and vimeo_access_token defined in site/config.yml and
-        # vimeo_client_secret and vimeo_access_token_secret defined in environment
-        # variables
-        #
-        # site - Awestruct Site instance
-        # 
-        # Returns an OAuth::AccessToken for the Vimeo API 
-        def access_token
-          if @access_token
-            @access_token
-          else
-            if not ENV['vimeo_client_secret']
-              puts 'Cannot fetch video info from vimeo, vimeo_client_secret is missing from environment variables'
-              return
-            end
-            if not @site.vimeo_client_id
-              puts 'Cannot fetch video info vimeo, vimeo_client_id is missing from _config/site.yml'
-              return
-            end
-            if not ENV['vimeo_access_token_secret']
-              puts 'Cannot fetch video info from vimeo, vimeo_access_token_secret is missing from environment variables'
-              return
-            end
-            if not @site.vimeo_access_token
-              puts 'Cannot fetch video info from vimeo, vimeo_access_token is missing from _config/site.yml'
-              return
-            end
-            consumer = OAuth::Consumer.new(@site.vimeo_client_id, ENV['vimeo_client_secret'],
-                                           { :site => "https://vimeo.com",
-                                             :scheme => :header
-            })
+      # Internal: Obtains an OAuth::AcccessToken for the Vimeo API, using the 
+      # vimeo_client_id and vimeo_access_token defined in site/config.yml and
+      # vimeo_client_secret and vimeo_access_token_secret defined in environment
+      # variables
+      #
+      # site - Awestruct Site instance
+      # 
+      # Returns an OAuth::AccessToken for the Vimeo API 
+      def access_token
+        if @access_token
+          @access_token
+        else
+          if not ENV['vimeo_client_secret']
+            puts 'Cannot fetch video info from vimeo, vimeo_client_secret is missing from environment variables'
             # now create the access token object from passed values
             token_hash = { :oauth_token => @site.vimeo_access_token,
                            :oauth_token_secret => ENV['vimeo_access_token_secret']
