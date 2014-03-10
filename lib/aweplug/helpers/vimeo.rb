@@ -59,7 +59,7 @@ module Aweplug
       #
       # full_name - the full name, e.g. Pete Muir
       def first_name(full_name)
-        full_name.split[0] || full_name
+        (full_name.nil?) ? full_name : full_name.split[0]
       end
 
       # Internal: Data object to hold and parse values from the Vimeo API.
@@ -188,7 +188,6 @@ module Aweplug
         #
         # Returns JSON retreived from the Vimeo API
         def exec_method(method, video_id)
-          # TODO: Look at switching this to faraday
           if access_token
             query = "http://vimeo.com/api/rest/v2?method=#{method}&video_id=#{video_id}&format=json"
             access_token.get(query).body
@@ -205,17 +204,35 @@ module Aweplug
       # 
       # Returns an OAuth::AccessToken for the Vimeo API 
       def access_token
+        site ||= @site
         if @access_token
           @access_token
         else
           if not ENV['vimeo_client_secret']
             puts 'Cannot fetch video info from vimeo, vimeo_client_secret is missing from environment variables'
-            # now create the access token object from passed values
-            token_hash = { :oauth_token => @site.vimeo_access_token,
-                           :oauth_token_secret => ENV['vimeo_access_token_secret']
-            }
-            OAuth::AccessToken.from_hash(consumer, token_hash )
+            return
           end
+          if not site.vimeo_client_id
+            puts 'Cannot fetch video info vimeo, vimeo_client_id is missing from _config/site.yml'
+            return
+          end
+          if not ENV['vimeo_access_token_secret']
+            puts 'Cannot fetch video info from vimeo, vimeo_access_token_secret is missing from environment variables'
+            return
+          end
+          if not site.vimeo_access_token
+            puts 'Cannot fetch video info from vimeo, vimeo_access_token is missing from _config/site.yml'
+            return
+          end
+          consumer = OAuth::Consumer.new(site.vimeo_client_id, ENV['vimeo_client_secret'],
+            { :site => "https://vimeo.com",
+              :scheme => :header
+            })
+          # now create the access token object from passed values
+          token_hash = { :oauth_token => site.vimeo_access_token,
+                         :oauth_token_secret => ENV['vimeo_access_token_secret']
+                       }
+          OAuth::AccessToken.from_hash(consumer, token_hash )
         end
       end
     end
