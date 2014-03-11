@@ -55,12 +55,16 @@ module Aweplug
         #
         # Returns nothing.
         def execute site
+          if site.cache.nil?
+            site.send('cache=', Aweplug::Cache::YamlFileCache.new)
+          end
           # Not sure if it's better to do this once per class, 
           # once per site, or once per invocation
           searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                                          :authenticate => true, 
                                                          :searchisko_username => ENV['dcp_user'], 
                                                          :searchisko_password => ENV['dcp_password'], 
+                                                         :cache => site.cache,
                                                          :logger => site.profile == 'developement'})
           Dir["#{@repo}/**/README.md"].each do |file|
             next if @excludes.include?(File.dirname(file))

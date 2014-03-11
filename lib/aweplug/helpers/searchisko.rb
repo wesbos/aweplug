@@ -16,6 +16,7 @@ module Aweplug
       #        :logging - Boolean to log responses
       #        :raise_error - Boolean flag if 404 and 500 should raise exceptions
       #        :adapter - faraday adapter to use, defaults to :net_http
+      #        :cache - Instance of a cache to use
       #
       # Returns a new instance of Searchisko.
       def initialize opts={} 
@@ -29,7 +30,7 @@ module Aweplug
           end
           builder.response :logger if opts[:logging]
           builder.response :raise_error if opts[:raise_error]
-          builder.use FaradayMiddleware::Caching, Aweplug::Cache::YamlFileCache.new, {}
+          builder.use FaradayMiddleware::Caching, opts[:cache], {}
           #builder.response :json, :content_type => /\bjson$/
           builder.adapter opts[:adapter] || :net_http
         end

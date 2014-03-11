@@ -1,4 +1,6 @@
 require 'oauth'
+require 'aweplug/cache/yaml_file_cache'
+require 'pry'
 
 module Aweplug
   module Helpers
@@ -65,9 +67,14 @@ module Aweplug
       # Internal: Data object to hold and parse values from the Vimeo API.
       class Video 
         include Aweplug::Helpers::Vimeo
+
         def initialize(url, access_token, site)
           @id = url.match(/^.*\/(\d*)$/)[1]
           @site = site
+          if site.cache.nil?
+            site.send('cache=', Aweplug::Cache::YamlFileCache.new)
+          end
+          @cache = site.cache
           @access_token = access_token
           fetch_info
           fetch_cast
@@ -83,7 +90,7 @@ module Aweplug
         end
 
         def duration
-          t = @video["duration"].to_i
+          t = Integer @video["duration"]
           Time.at(t).utc.strftime("%T")
         end
 
@@ -145,12 +152,17 @@ module Aweplug
           @thumb["_content"] || ''
         end
 
-        def fetch_info
-          body = exec_method "vimeo.videos.getInfo", @id
-          if body
-            @video = JSON.parse(body)["video"][0]
+        def fetch_info 
+          if @cache.read(@id).nil?  
+            body = exec_method "vimeo.videos.getInfo", @id
+            if body
+              @video = JSON.parse(body)["video"][0]
+              @cache.write(@id, body)
+            else
+              @video = {"title" => "Unable to fetch video info from vimeo"}
+            end
           else
-            @video = {"title" => "Unable to fetch video info from vimeo"}
+            @video = JSON.parse(@cache.read(@id))['video'][0]
           end
         end
 
@@ -165,21 +177,21 @@ module Aweplug
         def fetch_cast
           @cast = []
           if @video['cast']
-            cast = @video["cast"]
-            if cast['total'] != '1'
+            cast = @video['cast']
+            if cast['member'].is_a? Hash
+              if cast['member']['username'] != 'jbossdeveloper'
+                @cast << OpenStruct.new(cast['member'])
+              end 
+            else
               cast["member"].each do |c|
                 o = OpenStruct.new(c)
                 if o.username != "jbossdeveloper"
                   @cast << o
                 end
-              end 
-            else
-              if cast['member']['username'] != 'jbossdeveloper'
-                @cast << OpenStruct.new(cast['member'])
               end
             end
-          end
-        end 
+          end 
+        end
 
         # Internal: Execute a method against the Vimeo API
         #

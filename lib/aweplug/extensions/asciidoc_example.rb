@@ -70,10 +70,14 @@ module Aweplug
       #
       # Returns nothing.
       def execute site
+        if site.cache.nil?
+          site.send('cache=', Aweplug::Cache::YamlFileCache.new)
+        end
         searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                                        :authenticate => true, 
                                                        :searchisko_username => ENV['dcp_user'], 
                                                        :searchisko_password => ENV['dcp_password'], 
+                                                       :cache => site.cache,
                                                        :logger => site.profile == 'developement'})
         Find.find @directory do |path|
           Find.prune if File.directory?(path) && !@recurse_subdirectories
