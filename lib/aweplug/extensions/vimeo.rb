@@ -1,4 +1,5 @@
 require 'aweplug/helpers/vimeo'
+require 'aweplug/cache/yaml_file_cache'
 require 'json'
 
 module Aweplug
@@ -24,10 +25,14 @@ module Aweplug
 
         def execute site 
           @site = site
+          if site.cache.nil?
+            site.send('cache=', Aweplug::Cache::YamlFileCache.new)
+          end
           searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                                          :authenticate => true, 
                                                          :searchisko_username => ENV['dcp_user'], 
                                                          :searchisko_password => ENV['dcp_password'], 
+                                                         :cache => site.cache,
                                                          :logger => site.profile == 'developement'})
 
           site[@variable].each do |url|

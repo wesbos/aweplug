@@ -1,6 +1,5 @@
 require 'oauth'
 require 'aweplug/cache/yaml_file_cache'
-require 'pry'
 
 module Aweplug
   module Helpers

@@ -16,7 +16,7 @@ module Aweplug
       #        :logging - Boolean to log responses
       #        :raise_error - Boolean flag if 404 and 500 should raise exceptions
       #        :adapter - faraday adapter to use, defaults to :net_http
-      #        :cache - Instance of a cache to use
+      #        :cache - Instance of a cache to use, required.
       #
       # Returns a new instance of Searchisko.
       def initialize opts={} 
