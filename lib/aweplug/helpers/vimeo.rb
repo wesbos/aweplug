@@ -16,20 +16,20 @@ module Aweplug
       # 
       def vimeo(url)
         video = Video.new(url, access_token, site)
-        out = %Q[<div class="embedded-media">] +
-          %Q[<h4>#{video.title}</h4>] +
-          %Q[<iframe src="//player.vimeo.com/video/#{video.id}\?title=0&byline=0&portrait=0&badge=0&color=2664A2" width="500" height="313" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen}></iframe>]
-        video.cast.each do |c|
-          out += %Q[<div class="follow-links">] +
-            %Q[<span class="title">Follow #{first_name(c.realname)}</span>] +
-            # TODO add in follow links
-            %Q[<a><i class="icon-rss"></i></a>] +
-            %Q[<a><i class="icon-facebook"></i></a>] +
-            %Q[<a><i class="icon-twitter"></i></a>] +
-            %Q[<a><i class="icon-linkedin"></i></a>] +
-            %Q[</div>]
-        end
-        out + %Q[</div>]
+        #out = %Q[<div class="embedded-media">] +
+        %Q[<h4>#{video.title}</h4><div class="flex-video widescreen vimeo">] +
+          %Q[<iframe src="//player.vimeo.com/video/#{video.id}\?title=0&byline=0&portrait=0&badge=0&color=2664A2" width="500" height="313" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen}></iframe>] +
+        %Q[</div>]
+        #video.cast.each do |c|
+          #out += %Q[<div class="follow-links">] +
+            #%Q[<span class="title">Follow #{first_name(c.realname)}</span>] +
+            ## TODO add in follow links
+            #%Q[<a><i class="icon-rss"></i></a>] +
+            #%Q[<a><i class="icon-facebook"></i></a>] +
+            #%Q[<a><i class="icon-twitter"></i></a>] +
+            #%Q[<a><i class="icon-linkedin"></i></a>] +
+            #%Q[</div>]
+        #end
       end
 
       # Public: Embeds a vimeo video thumbnail into a web page. Retrieves the title
