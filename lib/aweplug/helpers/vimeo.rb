@@ -15,14 +15,14 @@ module Aweplug
       # Returns the html snippet
       # 
       def vimeo(url)
-        video = Video.new(url, access_token, site)
+        video = get_video(url)
         #out = %Q[<div class="embedded-media">] +
         %Q[<h4>#{video.title}</h4><div class="flex-video widescreen vimeo">] +
           %Q[<iframe src="//player.vimeo.com/video/#{video.id}\?title=0&byline=0&portrait=0&badge=0&color=2664A2" width="500" height="313" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen}></iframe>] +
         %Q[</div>]
         #video.cast.each do |c|
           #out += %Q[<div class="follow-links">] +
-            #%Q[<span class="title">Follow #{first_name(c.realname)}</span>] +
+            #%Q[<span class="title">Follow #{first_name(c.display_name)}</span>] +
             ## TODO add in follow links
             #%Q[<a><i class="icon-rss"></i></a>] +
             #%Q[<a><i class="icon-facebook"></i></a>] +
@@ -39,22 +39,40 @@ module Aweplug
       #
       # Returns the html snippet.
       def vimeo_thumb(url)
-        video = Video.new(url, access_token, site)
-        out = %Q{<a href="#{site.base_url}/video/vimeo/#{video.id}">} +
+        video = get_video(url)
+        out = %Q{<a href="#{video.detail_url}">} +
         %Q{<img src="#{video.thumb_url}" />} +
           %Q{</a>} +
           %Q{<span class="label material-duration">#{video.duration}</span>} +
           # TODO Add this in once the DCP supports manually adding tags
           # %Q{<span class="label material-level-beginner">Beginner<span>} +
-          %Q{<h4><a href="#{video.thumb_url}">#{video.title}</a></h4>} +
+          %Q{<h4><a href="#{video.detail_url}">#{video.title}</a></h4>} +
           # TODO Wire in link to profile URL
-          %Q{<p class="author">Author: <a href="#">#{video.author.realname}</a></p>} +
+          %Q{<p class="author">Author: <a href="#">#{video.author.display_name}</a></p>} +
           %Q{<p class="material-datestamp">Added #{video.upload_date}</p>} +
           # TODO wire in ratings
           #%Q{<p class="rating">Video<i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-empty"></i><i class="fa fa-star-empty"></i></p>} +
           %Q{<div class="body"><p>#{video.description}</p></div>}
         out
       end
+
+      # Internal: Retrieves the video object
+      #
+      # url: the Vimeo URL to retrieve the video from
+      def get_video(url)
+        if site.video_cache.nil?
+          site.send('video_cache=', {})
+        end
+        if site.video_cache.key?(url)
+          site.video_cache[url]
+        else
+          video = Video.new(url, access_token, site)
+          site.video_cache[url] = video
+          video
+        end
+      end
+
+
 
       # Internal: Extracts a firstname from a full name
       #
@@ -78,6 +96,15 @@ module Aweplug
           fetch_info
           fetch_cast
           fetch_thumb_url
+          #log
+        end
+
+        def log
+          File.open("_tmp/vimeo_fetch.log", 'a') { |f| f.write(
+          "------------------------------------\n" +
+          "Id: #{@id}\n" + 
+          "Cast: #{@cast}\n" + 
+          "Author: #{author}\n") }
         end
 
         def id
@@ -93,9 +120,16 @@ module Aweplug
           Time.at(t).utc.strftime("%T")
         end
 
+        def modified_date
+          pretty_date(@video["modified_date"])
+        end
+
         def upload_date
-          d = @video["upload_date"]
-          DateTime.parse(d).strftime("%F %T")
+          pretty_date(@video["upload_date"])
+        end
+
+        def detail_url
+          "#{@site.base_url}/video/vimeo/#{id}"
         end
 
         def description
@@ -112,28 +146,18 @@ module Aweplug
                 out += s
               end
             end
+            # Deal with the case that the description has no sentence end in it
+            out = out.empty? ? d : out
           end
-          out || ''
+          out
         end
 
         def author
-          if @cast[0]
-            @cast[0]
-          else
-            @cast = OpenStruct.new({"realname" => "Unknown"})
-          end
+          @author
         end
 
         def cast
           @cast || ''
-        end
-
-        def modified_date
-          if @video["upload_date"]
-            DateTime.parse(@video["upload_date"]).strftime("%F %T")
-          else
-            "UNKOWN DATE"
-          end
         end
 
         def tags
@@ -190,6 +214,7 @@ module Aweplug
               end
             end
           end 
+          @author = @cast[0] ? @cast[0] : OpenStruct.new({"display_name" => "Unknown"})
         end
 
         # Internal: Execute a method against the Vimeo API
@@ -204,6 +229,27 @@ module Aweplug
             access_token.get(query).body
           end
         end
+
+        def pretty_date(date_str)
+          date = DateTime.parse(date_str)
+          a = (Time.now-date.to_time).to_i
+
+          case a
+            when 0 then 'just now'
+            when 1 then 'a second ago'
+            when 2..59 then a.to_s+' seconds ago' 
+            when 60..119 then 'a minute ago' #120 = 2 minutes
+            when 120..3540 then (a/60).to_i.to_s+' minutes ago'
+            when 3541..7100 then 'an hour ago' # 3600 = 1 hour
+            when 7101..82800 then ((a+99)/3600).to_i.to_s+' hours ago' 
+            when 82801..172000 then 'a day ago' # 86400 = 1 day
+            when 172001..518400 then ((a+800)/(60*60*24)).to_i.to_s+' days ago'
+            when 518400..1036800 then 'a week ago'
+            when 1036800..4147200 then ((a+180000)/(60*60*24*7)).to_i.to_s+' weeks ago'
+            else date.strftime("%F")
+          end
+        end
+
       end
 
       # Internal: Obtains an OAuth::AcccessToken for the Vimeo API, using the 
