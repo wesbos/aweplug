@@ -1,4 +1,4 @@
 module Aweplug
-  VERSION='1.0.0.a21'
+  VERSION='1.0.0.a22'
 end
 
