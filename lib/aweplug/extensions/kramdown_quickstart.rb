@@ -66,7 +66,7 @@ module Aweplug
                                                          :searchisko_password => ENV['dcp_password'], 
                                                          :cache => site.cache,
                                                          :logger => site.profile == 'developement'})
-          Dir["#{@repo}/**/README.md"].each do |file|
+          Dir["#{@repo}/*/README.md"].each do |file|
             next if @excludes.include?(File.dirname(file))
             
             page = add_to_site site, file
