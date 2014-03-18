@@ -1,5 +1,6 @@
 require 'oauth'
 require 'aweplug/cache/yaml_file_cache'
+require 'aweplug/helpers/identity'
 require 'tilt'
 
 module Aweplug
@@ -84,7 +85,7 @@ module Aweplug
           @cache = site.cache
           @access_token = access_token
           fetch_info
-          fetch_cast
+          load_cast
           fetch_thumb_url
           #log
         end
@@ -228,22 +229,15 @@ module Aweplug
           end
         end
 
-        def fetch_cast
+        def load_cast
           @cast = []
-          if @video['cast']
+          if @site.identity_manager && @video['cast']
             cast = @video['cast']
-            if cast['member'].is_a? Hash
-              if cast['member']['username'] != 'jbossdeveloper'
-                @cast << OpenStruct.new(cast['member'])
-              end 
-            else
-              cast["member"].each do |c|
-                o = OpenStruct.new(c)
-                if o.username != "jbossdeveloper"
-                  @cast << o
-                end
-              end
-            end
+            if cast['member'].is_a?(Hash) && cast['member']['username'] != 'jbossdeveloper'
+              prototype = Aweplug::Identity::Contributor.new({"accounts" => {"vimeo.com" => {"username" => cast['member']['username']}}})
+              contrib = @site.identity_manager.get(prototype)
+              @cast << contrib
+            end 
           end 
         end
 
