@@ -48,7 +48,7 @@ module Aweplug
           # %Q{<span class="label material-level-beginner">Beginner<span>} +
           %Q{<h4><a href="#{video.detail_url}">#{video.title}</a></h4>} +
           # TODO Wire in link to profile URL
-          %Q{<p class="author">Author: <a href="#">#{video.author.display_name}</a></p>} +
+          %Q{<p class="author">Author: #{video.author.display_name}</p>} +
           %Q{<p class="material-datestamp">Added #{video.upload_date}</p>} +
           # TODO wire in ratings
           #%Q{<p class="rating">Video<i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-empty"></i><i class="fa fa-star-empty"></i></p>} +
