@@ -6,8 +6,10 @@ module Aweplug
   module Extensions
     module Video
       # Public: Awestruct Extension which iterates over a site variable which 
-      # contains vimeo URLs and creates pages out of them, also sends the info 
-      # over to a searchisko instance for indexing.
+      #         contains vimeo URLs and creates pages out of them, also sends 
+      #         the info over to a searchisko instance for indexing. This 
+      #         makes use of the Aweplug::Helper::Searchisko class, please see 
+      #         that class for more info on options and settings for Searchisko.  
       class Vimeo
         include Aweplug::Helpers::Vimeo
 
@@ -33,7 +35,7 @@ module Aweplug
                                                          :searchisko_username => ENV['dcp_user'], 
                                                          :searchisko_password => ENV['dcp_password'], 
                                                          :cache => site.cache,
-                                                         :logger => site.profile == 'developement'})
+                                                         :logger => site.log_faraday})
 
           site[@variable].each do |url|
             id = url.match(/^.*\/(\d*)$/)[1] 

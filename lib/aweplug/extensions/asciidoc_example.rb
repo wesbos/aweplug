@@ -3,7 +3,6 @@ require 'asciidoctor'
 require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/searchisko'
 require 'json'
-require 'pry'
 
 module Aweplug
   module Extensions
@@ -19,7 +18,9 @@ module Aweplug
       include Aweplug::Helper::Git::Commit::Metadata
       include Aweplug::Helper::Git::Repository
 
-      # Public: Initialization method, used in the awestruct pipeline.
+      # Public: Initialization method, used in the awestruct pipeline. This
+      #         makes use of the Aweplug::Helper::Searchisko class, please see 
+      #         that class for more info on options and settings for Searchisko.
       #
       # opts - A Hash of options, some being required, some not (default: {}). 
       #        :repository               - The String name of the directory 
@@ -78,7 +79,7 @@ module Aweplug
                                                        :searchisko_username => ENV['dcp_user'], 
                                                        :searchisko_password => ENV['dcp_password'], 
                                                        :cache => site.cache,
-                                                       :logger => site.profile == 'developement'})
+                                                       :logger => site.log_faraday})
         Find.find @directory do |path|
           Find.prune if File.directory?(path) && !@recurse_subdirectories
 

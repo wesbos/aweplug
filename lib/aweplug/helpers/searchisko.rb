@@ -1,6 +1,7 @@
 require 'faraday'
 require 'faraday_middleware' 
 require 'aweplug/cache/yaml_file_cache'
+require 'logger'
 
 module Aweplug
   module Helpers
@@ -13,7 +14,7 @@ module Aweplug
       #        :authenticate - boolean flag for authentication
       #        :searchisko_username - Username to use for auth
       #        :searchisko_password - Password to use for auth
-      #        :logging - Boolean to log responses
+      #        :logger - Boolean to log responses or an instance of Logger to use
       #        :raise_error - Boolean flag if 404 and 500 should raise exceptions
       #        :adapter - faraday adapter to use, defaults to :net_http
       #        :cache - Instance of a cache to use, required.
@@ -28,11 +29,17 @@ module Aweplug
               $LOG.warn 'Missing username and / or password for searchisko'
             end
           end
-          builder.response :logger if opts[:logging]
+          if (opts[:logger]) 
+            if (opts[:logger].is_a?(::Logger))
+              builder.response :logger, opts[:logger]
+            else 
+              builder.response :logger, ::Logger.new('_tmp/faraday.log', 'daily')
+            end
+          end
           builder.response :raise_error if opts[:raise_error]
           builder.use FaradayMiddleware::Caching, opts[:cache], {}
           #builder.response :json, :content_type => /\bjson$/
-          builder.adapter opts[:adapter] || :net_http
+          builder.adapter opts[:adapter] || :net_http_persistent
         end
       end
 

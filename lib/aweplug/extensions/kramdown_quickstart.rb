@@ -11,7 +11,9 @@ module Aweplug
       # Public: An awestruct extension for guides / examples written in AsciiDoc.
       #         Files with the .asciidoc or .adoc extension are considered to be
       #         AsciiDoc files. This extension makes use of asciidoctor to 
-      #         render the files.
+      #         render the files. This makes use of the 
+      #         Aweplug::Helper::Searchisko class, please see that class for 
+      #         more info on options and settings for Searchisko.
       #
       # Example
       #
@@ -65,7 +67,7 @@ module Aweplug
                                                          :searchisko_username => ENV['dcp_user'], 
                                                          :searchisko_password => ENV['dcp_password'], 
                                                          :cache => site.cache,
-                                                         :logger => site.profile == 'developement'})
+                                                         :logger => site.log_faraday})
           Dir["#{@repo}/*/README.md"].each do |file|
             next if @excludes.include?(File.dirname(file))
             
