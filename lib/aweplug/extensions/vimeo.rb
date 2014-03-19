@@ -48,29 +48,12 @@ module Aweplug
             page.send('video=', video)
             page.send('video_url=', url)
             site.pages << page 
-
-            unless video.fetch_info['title'].include? 'Unable to fetch'
-              searchisko_payload = {
-                :sys_type => 'jbossdeveloper_video',
-                :sys_content_provider => 'jboss-developer',
-                :sys_content_type => 'video',
-                :sys_content_id => video.id,
-                :sys_updated => video.modified_date,
-                :sys_contributors => video.cast,
-                :sys_activity_dates => [video.modified_date, video.upload_date],
-                :sys_created => video.upload_date,
-                :sys_title => video.title,
-                :sys_url_view => "http://vimeo.com/#{video.id}",
-                :sys_description => video.description,
-                :duration => video.duration,
-                :thumbnail => video.thumb_url,
-                :tag => video.tags
-              }
-
+            
+            unless (payload = video.searchisko_payload).nil?
               unless site.profile =~ /development/
-                searchisko.push_content(searchisko_payload[:sys_type], 
-                  searchisko_payload[:sys_content_id], 
-                  searchisko_payload.to_json)
+                searchisko.push_content(payload[:sys_type], 
+                  payload[:sys_content_id], 
+                  payload.to_json)
               end 
             end
           end

@@ -153,11 +153,11 @@ module Aweplug
         end
 
         def author
-          @author
+          @cast[0] ? @cast[0] : OpenStruct.new({"display_name" => "Unknown"})
         end
 
         def cast
-          @cast || ''
+          @cast
         end
 
         def tags
@@ -182,10 +182,35 @@ module Aweplug
               @video = JSON.parse(body)["video"][0]
               @cache.write(@id, body)
             else
+              @fetch_failed = true
               @video = {"title" => "Unable to fetch video info from vimeo"}
             end
           else
             @video = JSON.parse(@cache.read(@id))['video'][0]
+          end
+        end
+
+        def searchisko_payload
+          unless @fetch_failed
+            cast_as_hash = []
+            @cast.each do |c|
+              cast_as_hash << c.marshal_dump
+            end
+            author_as_hash = @cast[0] ? @cast[0].marshal_dump : {}
+            searchisko_payload = {
+              :sys_title => title,
+              :sys_description => description,
+              :sys_url_view => "http://#{@site.base_url}/video/vimeo/#{id}",
+              :sys_type => 'jbossdeveloper_video',
+              :author => author_as_hash,
+              :contributors => cast_as_hash,
+              :sys_created => @video["upload_date"],
+              :sys_activity_dates => [@video["modified_date"], @video["upload_date"]],
+              :sys_updated => @video["modified_date"],
+              :duration => duration,
+              :thumbnail => thumb_url,
+              :tag => tags
+            }
           end
         end
 
@@ -214,7 +239,6 @@ module Aweplug
               end
             end
           end 
-          @author = @cast[0] ? @cast[0] : OpenStruct.new({"display_name" => "Unknown"})
         end
 
         # Internal: Execute a method against the Vimeo API
