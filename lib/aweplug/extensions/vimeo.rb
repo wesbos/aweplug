@@ -54,7 +54,7 @@ module Aweplug
             unless (payload = video.searchisko_payload).nil?
               unless site.profile =~ /development/
                 searchisko.push_content(payload[:sys_type], 
-                  payload[:sys_content_id], 
+                  video.id, 
                   payload.to_json)
               end 
             end
