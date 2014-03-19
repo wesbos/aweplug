@@ -95,7 +95,8 @@ module Aweplug
               :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
               :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
               :sys_updated => metadata[:commits].collect { |c| DateTime.parse c[:date] }.first,
-              :target_product => metadata[:target_product]
+              :target_product => metadata[:target_product],
+              :github_repo_url => metadata[:github_repo_url]
             } 
 
             unless site.profile =~ /development/
