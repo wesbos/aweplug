@@ -200,7 +200,7 @@ module Aweplug
             searchisko_payload = {
               :sys_title => title,
               :sys_description => description,
-              :sys_url_view => "http://#{@site.base_url}/video/vimeo/#{id}",
+              :sys_url_view => "#{@site.base_url}/video/vimeo/#{id}",
               :sys_type => 'jbossdeveloper_video',
               :author => author_as_hash,
               :contributors => cast_as_hash,
