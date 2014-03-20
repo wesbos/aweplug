@@ -204,14 +204,18 @@ module Aweplug
               :sys_type => 'jbossdeveloper_video',
               :author => author_as_hash,
               :contributors => cast_as_hash,
-              :sys_created => @video["upload_date"],
-              :sys_activity_dates => [@video["modified_date"], @video["upload_date"]],
-              :sys_updated => @video["modified_date"],
-              :duration => duration,
+              :sys_created => DateTime.parse(@video["upload_date"]).iso8601,
+              :sys_last_activity_date => DateTime.parse(@video["modified_date"]).iso8601,
+              :duration => duration_in_seconds,
               :thumbnail => thumb_url,
               :tag => tags
             }
           end
+        end
+
+        def duration_in_seconds
+          a = @video["duration"].split(":").reverse
+          (a.length > 0 ? a[0].to_i : 0) + (a.length > 1 ? a[1].to_i * 60 : 0) + (a.length > 2 ? a[2].to_i * 60 : 0)
         end
 
         def fetch_thumb_url
