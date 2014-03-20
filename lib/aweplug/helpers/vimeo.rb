@@ -161,13 +161,13 @@ module Aweplug
         end
 
         def tags
-          result = []
+          r = []
           if @video['tags'].is_a? Hash
             @video['tags']['tag'].inject([]) do |result, element|
-              result << element['normalized']
+              r << element['normalized']
             end
           end
-          result
+          r
         end
 
         def thumb_url
