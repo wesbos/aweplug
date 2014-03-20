@@ -161,14 +161,13 @@ module Aweplug
         end
 
         def tags
+          result = []
           if @video['tags'].is_a? Hash
             @video['tags']['tag'].inject([]) do |result, element|
               result << element['normalized']
-              result
             end
-          else
-            ''
           end
+          result
         end
 
         def thumb_url
@@ -208,7 +207,7 @@ module Aweplug
               :sys_last_activity_date => DateTime.parse(@video["modified_date"]).iso8601,
               :duration => duration_in_seconds,
               :thumbnail => thumb_url,
-              :tag => tags
+              :tags => tags
             }
           end
         end
