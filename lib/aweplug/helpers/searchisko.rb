@@ -31,9 +31,9 @@ module Aweplug
           end
           if (opts[:logger]) 
             if (opts[:logger].is_a?(::Logger))
-              builder.response :logger, opts[:logger]
+              builder.response :logger, @logger = opts[:logger]
             else 
-              builder.response :logger, ::Logger.new('_tmp/faraday.log', 'daily')
+              builder.response :logger, @logger = ::Logger.new('_tmp/faraday.log', 'daily')
             end
           end
           builder.response :raise_error if opts[:raise_error]
@@ -103,10 +103,16 @@ module Aweplug
       #   searchisko.post "rating/#{searchisko_document_id}", {rating: 3}
       #   # => Faraday Response
       def post path, params = {}
-        @faraday.post do |req|
+        resp = @faraday.post do |req|
           req.url "/v1/rest/" + path
           req.headers['Content-Type'] = 'application/json'
           req.body = params
+          if @logger
+            @logger.debug "request body: #{req.body}"
+          end
+        end
+        if @logger && !resp.status.between?(200, 300)
+          @logger.debug "response body: #{resp.body}"
         end
       end
     end
