@@ -31,8 +31,8 @@ module Aweplug
           md5sum = Digest::MD5.hexdigest(content)
           if yml[id]["md5sum"] != md5sum
             yml[id]["md5sum"] = md5sum
-            yml[id]["build_no"] += 1
-            File.open(@tmp_dir.join(name + "-" + yml[id]["build_no"].to_s + ext), 'w') { |file| file.write(content) }
+            build_no = yml[id]["build_no"] += 1
+            File.open(@tmp_dir.join(name + "-" + build_no.to_s + ext), 'w') { |file| file.write(content) }
           end
           name + "-" + yml[id]["build_no"].to_s + ext
         end
