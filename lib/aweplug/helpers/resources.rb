@@ -1,6 +1,7 @@
 require 'nokogiri'
 require 'uglifier'
 require 'aweplug/helpers/cdn'
+require 'net/http'
 
 module Aweplug
   module Helpers
@@ -18,22 +19,26 @@ module Aweplug
           if @@cache.key?(src)
             @@cache[src]
           else
+            raw_content = ""
             content = ""
             @@cache[src] = ""
             items(src).each do |i|
               if !i.empty? && i =~ /^#{@site.base_url}\/{1,2}(.*)$/
-                content << load_content($1)
+                raw_content << local_content($1)
               else
-                @@cache[src] << tag(i) 
+                puts "Loading content from #{i}"
+                content << remote_content(i)
               end
             end
-            if !content.empty?
+            file_ext = ext
+            if !raw_content.empty?
               if @site.minify
-                content = compress(content)
-                file_ext = min_ext
+                content << compress(raw_content)
               else
-                file_ext = ext
+                content << raw_content
               end
+            end
+            if !content.empty? 
               filename = Aweplug::Helpers::CDN.new(ctx_path).version(id, file_ext, content)
               @@cache[src] << tag("#{@site.cdn_http_base}/#{ctx_path}/#{filename}")
             end
@@ -58,12 +63,12 @@ module Aweplug
       def ctx_path
       end
 
-      def min_ext
-        ".min" << ext
+      def local_content(src)
+        @site.engine.load_site_page(src).rendered_content
       end
 
-      def load_content(src)
-        @site.engine.load_site_page(src).rendered_content
+      def remote_content(src)
+        Net::HTTP.get(URI.parse(src))
       end
 
       def compressor(input, compressor)
@@ -140,20 +145,15 @@ module Aweplug
         ".css"
       end
 
-      def min_ext
-        # Compression is not supported at this level. Sass :compressed should be used
-        ext        
-      end
+      alias :super_local_content :local_content
 
-      alias :super_load_content :load_content
-
-      def load_content(src)
+      def local_content(src)
         if File.exists? src
-          super_load_content(src)
+          super_local_content(src)
         else
           scss = src.gsub(/\.css$/, ".scss")
           if File.exists? scss
-            super_load_content(scss)
+            super_local_content(scss)
           else
             raise "Unable to locate file for #{src}"
           end
