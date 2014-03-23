@@ -256,6 +256,6 @@ module Sass::Script::Functions
   end
 
 
-  declare :img_url, [:src]
+  declare :cdn, [:src]
 end
 
