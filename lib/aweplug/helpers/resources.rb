@@ -7,6 +7,13 @@ require 'sass'
 module Aweplug
   module Helpers
     module Resources
+
+      REMOTE_PATH_PATTERN = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/
+
+      def self.local_path_pattern(base_url)
+        /^#{base_url}\/{1,2}(.*)$/
+      end
+
       class Resource
 
         def initialize(site)
@@ -24,9 +31,10 @@ module Aweplug
               content = ""
               @@cache[src] = ""
               items(src).each do |i|
-                if !i.empty? && i =~ /^#{@site.base_url}\/{1,2}(.*)$/
+                if i =~ Resources::local_path_pattern(@site.base_url)
                   raw_content << local_content($1)
-                else
+                elsif i =~ Resources::REMOTE_PATH_PATTERN
+                  puts "Fetching #{i}"
                   content << remote_content(i)
                 end
               end
@@ -112,6 +120,18 @@ module Aweplug
           @site.javascripts_context_path || CONTEXT_PATH
         end
 
+        alias :super_local_content :local_content
+        alias :super_remote_content :remote_content
+
+        def local_content(src)
+          "/* Original File: #{src} */\n#{super_local_content(src)};"
+        end
+
+        def remote_content(src)
+          "/* Original File: #{src} */\n#{super_remote_content(src)};"
+        end
+
+
         private
 
         class JSCompressor
@@ -176,7 +196,7 @@ module Aweplug
         end
 
         def path(src_path)
-          if src_path =~ /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/
+          if src_path =~ Resources::REMOTE_PATH_PATTERN
             content = Net::HTTP.get(URI.parse(src_path))
             src = Pathname.new($4)
           else
@@ -235,10 +255,14 @@ module Aweplug
       end
 
       def cdn(src)
-        if src =~ /^#{site.base_url}\/{1,2}(.*)$/
-          src = $1
+        if site.cdn_http_base
+          if src =~ Resources::local_path_pattern(site.base_url)
+            src = $1
+          end
+          SingleResource.new(site.dir, site.cdn_http_base).path(src)
+        else
+          src
         end
-        Aweplug::Helpers::Resources::SingleResource.new(site.dir, site.cdn_http_base).path(src)
       end
 
     end
@@ -249,7 +273,7 @@ module Sass::Script::Functions
 
   def cdn(src)
     if @options[:cdn_http_base]
-      Sass::Script::String.new(Aweplug::Helpers::Resources::SingleResource.new(@options[:filename].to_s, @options[:cdn_http_base].to_s).url(unquote(src).to_s))
+      Sass::Script::String.new(Aweplug::Helpers::Resources::SingleResource.new(@options[:original_filename].to_s, @options[:cdn_http_base].to_s).url(unquote(src).to_s))
     else
       Sass::Script::String.new("url(#{src.to_s})")
     end
