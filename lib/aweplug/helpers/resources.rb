@@ -251,7 +251,7 @@ module Sass::Script::Functions
     if @options[:cdn_http_base]
       Sass::Script::String.new(Aweplug::Helpers::Resources::SingleResource.new(@options[:filename].to_s, @options[:cdn_http_base].to_s).url(unquote(src).to_s))
     else
-      src
+      Sass::Script::String.new("url(#{src.to_s})")
     end
   end
 
