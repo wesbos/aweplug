@@ -177,15 +177,23 @@ module Aweplug
         def fetch_info 
           if @cache.read(@id).nil?  
             body = exec_method "vimeo.videos.getInfo", @id
-            if body
-              @video = JSON.parse(body)["video"][0]
-              @cache.write(@id, body)
-            else
+            json = JSON.parse(body)
+            if json["stat"] == "fail"
+              puts "Error fetching info for video: #{@id}. Vimeo says \"#{json["err"]["msg"]}\" and explains \"#{json["err"]["expl"]}\"."
               @fetch_failed = true
-              @video = {"title" => "Unable to fetch video info from vimeo"}
+              @video = {"title" => json["err"]["msg"]}
+            else
+              begin
+                @video = json["video"][0]
+              rescue Exception => e
+                puts "Error parsing response for video #{@id}"
+                puts "Response from server: "
+                puts body 
+              end
+              @cache.write(@id, @video)
             end
           else
-            @video = JSON.parse(@cache.read(@id))['video'][0]
+            @video = @cache.read @id
           end
         end
 
