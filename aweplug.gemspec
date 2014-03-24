@@ -28,6 +28,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'net-http-persistent', '~> 2.9.4'
   gem.add_dependency 'uglifier', '~> 2.0.1'
   gem.add_dependency 'sass', '~> 3.2'
+  gem.add_dependency 'nokogiri', '~> 1.5.10'
 
   gem.add_development_dependency 'guard-rspec', '~> 3.0.0'
   gem.add_development_dependency 'rake', '~> 10.0.4'
