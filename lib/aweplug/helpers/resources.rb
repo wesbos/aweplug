@@ -133,10 +133,9 @@ module Aweplug
         private
 
         class JSCompressor
-          # Require this late to prevent people doing devel needing to set up a JS runtime
-          require 'uglifier'
-          
           def compress( input )
+            # Require this late to prevent people doing devel needing to set up a JS runtime
+            require 'uglifier'
             Uglifier.new(:mangle => false).compile(input)
           end
         end
