@@ -34,7 +34,6 @@ module Aweplug
                 if i =~ Resources::local_path_pattern(@site.base_url)
                   raw_content << local_content($1)
                 elsif i =~ Resources::REMOTE_PATH_PATTERN
-                  puts "Fetching #{i}"
                   content << remote_content(i)
                 end
               end

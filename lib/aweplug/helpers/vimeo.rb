@@ -185,15 +185,15 @@ module Aweplug
             else
               begin
                 @video = json["video"][0]
+                @cache.write(@id, body)
               rescue Exception => e
                 puts "Error parsing response for video #{@id}"
                 puts "Response from server: "
                 puts body 
               end
-              @cache.write(@id, @video)
             end
           else
-            @video = @cache.read @id
+            @video = JSON.parse(@cache.read(@id))['video'][0]
           end
         end
 
