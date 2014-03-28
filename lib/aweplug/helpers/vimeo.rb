@@ -1,5 +1,6 @@
 require 'oauth'
 require 'aweplug/cache/yaml_file_cache'
+require 'tilt'
 
 module Aweplug
   module Helpers
@@ -14,22 +15,8 @@ module Aweplug
       #
       # Returns the html snippet
       # 
-      def vimeo(url)
-        video = get_video(url)
-        #out = %Q[<div class="embedded-media">] +
-        %Q[<h4>#{video.title}</h4><div class="flex-video widescreen vimeo">] +
-          %Q[<iframe src="//player.vimeo.com/video/#{video.id}\?title=0&byline=0&portrait=0&badge=0&color=2664A2" width="500" height="313" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen}></iframe>] +
-        %Q[</div>]
-        #video.cast.each do |c|
-          #out += %Q[<div class="follow-links">] +
-            #%Q[<span class="title">Follow #{first_name(c.display_name)}</span>] +
-            ## TODO add in follow links
-            #%Q[<a><i class="icon-rss"></i></a>] +
-            #%Q[<a><i class="icon-facebook"></i></a>] +
-            #%Q[<a><i class="icon-twitter"></i></a>] +
-            #%Q[<a><i class="icon-linkedin"></i></a>] +
-            #%Q[</div>]
-        #end
+      def video_player(video, snippet = nil)
+        render video, "video_player.html.slim", snippet
       end
 
       # Public: Embeds a vimeo video thumbnail into a web page. Retrieves the title
@@ -38,28 +25,11 @@ module Aweplug
       # url - the URL of the vimeo page for the video to display
       #
       # Returns the html snippet.
-      def vimeo_thumb(url)
-        video = get_video(url)
-        out = %Q{<a href="#{video.detail_url}">} +
-        %Q{<img src="#{video.thumb_url}" />} +
-          %Q{</a>} +
-          %Q{<span class="label material-duration">#{video.duration}</span>} +
-          # TODO Add this in once the DCP supports manually adding tags
-          # %Q{<span class="label material-level-beginner">Beginner<span>} +
-          %Q{<h4><a href="#{video.detail_url}">#{video.title}</a></h4>} +
-          # TODO Wire in link to profile URL
-          %Q{<p class="author">Author: #{video.author.display_name}</p>} +
-          %Q{<p class="material-datestamp">Added #{video.upload_date}</p>} +
-          # TODO wire in ratings
-          #%Q{<p class="rating">Video<i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-empty"></i><i class="fa fa-star-empty"></i></p>} +
-          %Q{<div class="body"><p>#{video.description}</p></div>}
-        out
+      def video_thumb(video, snippet = nil)
+        render video, "video_thumb.html.slim", snippet
       end
 
-      # Internal: Retrieves the video object
-      #
-      # url: the Vimeo URL to retrieve the video from
-      def get_video(url)
+      def video(url)
         if site.video_cache.nil?
           site.send('video_cache=', {})
         end
@@ -71,6 +41,24 @@ module Aweplug
           video
         end
       end
+
+      protected 
+
+      def render(video, default_snippet, snippet)
+        if !video.fetch_failed
+          if snippet
+            path = Pathname.new(site.dir).join("_partials").join(snippet)
+          else
+            path = Pathname.new(File.dirname(__FILE__)).join(default_snippet)
+          end
+          Tilt.new(path.to_s).render(Object.new, :video => video)
+        end
+      end
+
+      # Internal: Retrieves the video object
+      #
+      # url: the Vimeo URL to retrieve the video from
+      
 
 
 
@@ -84,6 +72,8 @@ module Aweplug
       # Internal: Data object to hold and parse values from the Vimeo API.
       class Video 
         include Aweplug::Helpers::Vimeo
+
+        attr_accessor :fetch_failed
 
         def initialize(url, access_token, site)
           @id = url.match(/^.*\/(\d*)$/)[1]
@@ -126,6 +116,10 @@ module Aweplug
 
         def upload_date
           pretty_date(@video["upload_date"])
+        end
+
+        def upload_date_iso8601
+          DateTime.parse(@video["upload_date"]).iso8601
         end
 
         def detail_url
@@ -183,6 +177,7 @@ module Aweplug
               @fetch_failed = true
               @video = {"title" => json["err"]["msg"]}
             else
+              @fetch_failed = false
               begin
                 @video = json["video"][0]
                 @cache.write(@id, body)
@@ -211,7 +206,7 @@ module Aweplug
               :sys_type => 'jbossdeveloper_video',
               :author => author_as_hash,
               :contributors => cast_as_hash,
-              :sys_created => DateTime.parse(@video["upload_date"]).iso8601,
+              :sys_created => upload_date_iso8601,
               :sys_last_activity_date => DateTime.parse(@video["modified_date"]).iso8601,
               :duration => duration_in_seconds,
               :thumbnail => thumb_url,
