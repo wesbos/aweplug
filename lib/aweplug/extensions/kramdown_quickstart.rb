@@ -118,7 +118,6 @@ module Aweplug
         # out metadata from the README files.
         # 
         # file - The String file path (relative or absolute) to parse.
-        
         #
         # Returns a Hash of the metadata retrieved.
         def extract_metadata(file)
