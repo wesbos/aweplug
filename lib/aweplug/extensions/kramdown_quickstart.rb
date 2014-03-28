@@ -76,6 +76,8 @@ module Aweplug
             metadata = extract_metadata(file)
             metadata[:commits] = commit_info @repo, Pathname.new(file)
             metadata[:github_repo_url] = repository_url @repo
+            metadata[:contributors] = metadata[:commits].collect { |c| c[:author] }.uniq
+            metadata[:contributors].delete(metadata[:author])
             converted_html = metadata.delete :converted
 
             page.send 'metadata=', metadata
@@ -85,7 +87,7 @@ module Aweplug
               :sys_title => metadata[:title], 
               :sys_content_id => Digest::SHA1.hexdigest(metadata[:title])[0..7], # maybe change?
               :level => metadata[:level],
-              :tags => metadata[:technologies].split(/,\s/),
+              :tags => metadata[:technologies],
               :sys_description => metadata[:summary],
               :sys_content => converted_html, 
               :sys_url_view => "#{site.base_url}#{site.ctx_root.nil? ? '/' : '/' + site.ctx_root + '/'}#{page.output_path}",
@@ -93,7 +95,7 @@ module Aweplug
               :sys_type => 'jbossdeveloper_quickstart',
               :sys_content_type => 'quickstart',
               :sys_content_provider => 'jboss-developer',
-              :contributors => metadata[:commits].collect { |c| c[:author] }.unshift(metadata[:author]).uniq,
+              :contributors => metadata[:contributors],
               :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
               :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
               :sys_updated => metadata[:commits].collect { |c| DateTime.parse c[:date] }.first,
@@ -116,6 +118,7 @@ module Aweplug
         # out metadata from the README files.
         # 
         # file - The String file path (relative or absolute) to parse.
+        
         #
         # Returns a Hash of the metadata retrieved.
         def extract_metadata(file)
@@ -128,6 +131,7 @@ module Aweplug
           metadata = document.root.options[:metadata]
           metadata[:toc] = toc_items
           metadata[:converted] = document.to_html
+          metadata[:technologies] = metadata[:technologies].split(",")
           metadata
         end
 

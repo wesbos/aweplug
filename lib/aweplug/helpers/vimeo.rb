@@ -73,7 +73,7 @@ module Aweplug
       class Video 
         include Aweplug::Helpers::Vimeo
 
-        attr_accessor :fetch_failed
+        attr_reader :fetch_failed
 
         def initialize(url, access_token, site)
           @id = url.match(/^.*\/(\d*)$/)[1]
