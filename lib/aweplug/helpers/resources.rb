@@ -1,7 +1,10 @@
 require 'nokogiri'
 require 'aweplug/helpers/cdn'
+require 'aweplug/helpers/png'
 require 'net/http'
 require 'sass'
+require 'tempfile'
+require 'securerandom'
 
 module Aweplug
   module Helpers
@@ -184,10 +187,10 @@ module Aweplug
         IMG_EXT = ['.png', '.jpeg', '.jpg', '.gif']
         FONT_EXT = ['.otf', '.eot', '.svg', '.ttf', '.woff']
 
-        
-        def initialize(base_path, cdn_http_base)
+        def initialize(base_path, cdn_http_base, minify)
           @base = base_path
           @cdn_http_base = cdn_http_base
+          @minify = minify
         end
 
         def path(src_path)
@@ -200,9 +203,14 @@ module Aweplug
             base = base.dirname if !File.directory? base
             abs = base.join(src)
             if File.exists? abs
-              content = File.read(abs)
+              raw_content = File.read(abs)
             else
               raise "Unable to read file from #{abs}"
+            end
+            if @minify
+              content = compress(raw_content, src.extname)
+            else
+              content = raw_content
             end
           end
           file_ext = src.extname
@@ -214,6 +222,14 @@ module Aweplug
           cdn_name = Aweplug::Helpers::CDN.new(ctx_path).version(id, file_ext, content)
           out = "#{@cdn_http_base}/#{ctx_path}/#{cdn_name}"
           out
+        end
+
+        def compress(content, file_ext)
+          if file_ext == ".png"
+            Aweplug::Helpers::PNG.new(content).compress.output
+          else
+            content
+          end
         end
 
         def url(src_path)
@@ -229,7 +245,6 @@ module Aweplug
             "other"
           end
         end
-
       end
 
       # Public: Slim helper that captures the content of a block
@@ -257,7 +272,7 @@ module Aweplug
           if src =~ Resources::local_path_pattern(site.base_url)
             src = $1
           end
-          SingleResource.new(site.dir, site.cdn_http_base).path(src)
+          SingleResource.new(site.dir, site.cdn_http_base, site.minify).path(src)
         else
           src
         end
@@ -271,7 +286,7 @@ module Sass::Script::Functions
 
   def cdn(src)
     if @options[:cdn_http_base]
-      Sass::Script::String.new(Aweplug::Helpers::Resources::SingleResource.new(@options[:original_filename].to_s, @options[:cdn_http_base].to_s).url(unquote(src).to_s))
+      Sass::Script::String.new(Aweplug::Helpers::Resources::SingleResource.new(@options[:original_filename].to_s, @options[:cdn_http_base].to_s, @options[:minify]).url(unquote(src).to_s))
     else
       Sass::Script::String.new("url(#{src.to_s})")
     end
