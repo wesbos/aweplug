@@ -26,25 +26,20 @@ module Aweplug
             if @@cache.key?(src)
               @@cache[src]
             else
-              raw_content = ""
               content = ""
               @@cache[src] = ""
               items(src).each do |i|
                 if i =~ Resources::local_path_pattern(@site.base_url)
-                  raw_content << local_content($1)
+                  content << local_content($1)
                 elsif i =~ Resources::REMOTE_PATH_PATTERN
                   content << remote_content(i)
                 end
               end
-              file_ext = ext
-              if !raw_content.empty?
+              if !content.empty?
                 if @site.minify
-                  content << compress(raw_content)
-                else
-                  content << raw_content
+                  content = compress(content)
                 end
-              end
-              if !content.empty? 
+                file_ext = ext                
                 filename = Aweplug::Helpers::CDN.new(ctx_path).version(id, file_ext, content)
                 @@cache[src] << tag("#{@site.cdn_http_base}/#{ctx_path}/#{filename}")
               end
@@ -211,6 +206,9 @@ module Aweplug
             end
           end
           file_ext = src.extname
+          if @minify
+            content = compress(content, file_ext)
+          end
           id = src.to_s[0, src.to_s.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
           ctx_path = ctx_path file_ext
           cdn_name = Aweplug::Helpers::CDN.new(ctx_path).version(id, file_ext, content)
