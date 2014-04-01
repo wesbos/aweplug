@@ -5,7 +5,7 @@ div(itemprop="video" itemscope itemtype="http://schema.org/VideoObject")
   span itemprop="thumbnail" content="#{video.thumb_url}"
   span itemprop="uploadDate" content="#{video.upload_date_iso8601}"
   .flex-video(widescreen vimeo)
-    iframe(src="//player.vimeo.com/video/#{video.id}\?title=0&byline=0&portrait=0&badge=0&color=2664A2" width="500" height="313" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen)
+    iframe(src="//player.vimeo.com/video/#{video.id}?title=0&byline=0&portrait=0&badge=0&color=2664A2" width="500" height="313" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen)
 / TODO Add this back in once we have identity support  
   - video.cast.each do |c|
     .follow-links
