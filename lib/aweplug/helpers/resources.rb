@@ -10,8 +10,6 @@ module Aweplug
   module Helpers
     module Resources
 
-      REMOTE_PATH_PATTERN = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/
-
       def self.local_path_pattern(base_url)
         /^#{base_url}\/{1,2}(.*)$/
       end
@@ -34,7 +32,7 @@ module Aweplug
               items(src).each do |i|
                 if i =~ Resources::local_path_pattern(@site.base_url)
                   content << local_content($1)
-                elsif i =~ Resources::REMOTE_PATH_PATTERN
+                elsif URI.parse(i).scheme
                   content << remote_content(i)
                 end
               end
@@ -194,34 +192,36 @@ module Aweplug
         end
 
         def path(src_path)
-          if src_path =~ Resources::REMOTE_PATH_PATTERN
-            content = Net::HTTP.get(URI.parse(src_path))
-            src = Pathname.new($4)
+          uri = URI.parse(src_path)
+          file_ext = File.extname(uri.path)
+          if uri.scheme
+            content = Net::HTTP.get(uri)
           else
-            src  = Pathname.new(src_path)
+            # Some file paths may have query strings or fragments...
             base = Pathname.new(@base)
             base = base.dirname if !File.directory? base
-            abs = base.join(src)
+            abs = base.join(uri.path)
             if File.exists? abs
               raw_content = File.read(abs)
             else
               raise "Unable to read file from #{abs}"
             end
             if @minify
-              content = compress(raw_content, src.extname)
+              content = compress(raw_content, file_ext)
             else
               content = raw_content
             end
           end
-          file_ext = src.extname
           if @minify
             content = compress(content, file_ext)
           end
-          id = src.to_s[0, src.to_s.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
+          id = uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
           ctx_path = ctx_path file_ext
           cdn_name = Aweplug::Helpers::CDN.new(ctx_path).version(id, file_ext, content)
-          out = "#{@cdn_http_base}/#{ctx_path}/#{cdn_name}"
-          out
+          res = URI.parse("#{@cdn_http_base}/#{ctx_path}/#{cdn_name}")
+          res.query = uri.query if uri.query
+          res.fragment = uri.fragment if uri.fragment
+          res
         end
 
         def compress(content, file_ext)
