@@ -96,6 +96,7 @@ module Aweplug
               :sys_content_type => 'quickstart',
               :sys_content_provider => 'jboss-developer',
               :contributors => metadata[:contributors],
+              :author => metadata[:author],
               :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
               :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
               :sys_updated => metadata[:commits].collect { |c| DateTime.parse c[:date] }.first,
