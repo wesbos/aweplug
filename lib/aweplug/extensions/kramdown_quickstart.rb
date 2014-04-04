@@ -25,18 +25,23 @@ module Aweplug
         # Public: Initialization method, used in the awestruct pipeline.
         #
         # opts - A Hash of options, some being required, some not (default: {}). 
-        #        :repository    - The String name of the directory containing 
-        #                         the repository (required).
-        #        :layout        - The String name of the layout to use, 
-        #                         omitting the extension (required).
-        #        :output_dir    - The String or Pathname of the output 
-        #                         directory for the files (required).
-        #        :site_variable - String name of the key within the site
-        #                         containing additional metadata about 
-        #                         the guide (default: value of 
-        #                         :output_dir).
-        #        :excludes     -  Array of Strings containing additional 
-        #                         directory names to exclude. Defaults to [].
+        #        :repository         - The String name of the directory containing 
+        #                              the repository (required).
+        #        :layout             - The String name of the layout to use, 
+        #                              omitting the extension (required).
+        #        :output_dir         - The String or Pathname of the output 
+        #                              directory for the files (required).
+        #        :site_variable      - String name of the key within the site
+        #                              containing additional metadata about 
+        #                              the guide (default: value of 
+        #                              :output_dir).
+        #        :excludes           - Array of Strings containing additional 
+        #                              directory names to exclude. Defaults to [].
+        #        :push_to_searchisko - A boolean controlling whether a push to
+        #                              seachisko should happen. A push will not
+        #                              happen when the development profile is in
+        #                              use, regardless of the value of this 
+        #                              option.
         # Returns the created extension.
         def initialize opts = {}
           required_keys = [:repository, :layout, :output_dir]
@@ -48,6 +53,7 @@ module Aweplug
           @layout = opts[:layout]
           @site_variable = opts[:site_variable] || opts[:output_dir]
           @excludes = opts[:excludes] || []
+          @push_to_searchisko = opts[:push_to_searchisko] || true
         end
 
         # Internal: Execute method required by awestruct. Called during the
@@ -104,7 +110,7 @@ module Aweplug
               :github_repo_url => metadata[:github_repo_url]
             } 
 
-            unless site.profile =~ /development/
+            unless !@push_to_searchisko || site.profile =~ /development/
               searchisko.push_content(searchisko_hash[:sys_type], 
                 searchisko_hash[:sys_content_id], 
                 searchisko_hash.to_json)

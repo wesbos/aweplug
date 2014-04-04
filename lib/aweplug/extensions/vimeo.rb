@@ -15,14 +15,20 @@ module Aweplug
 
         # Public: Creates a new instance of this Awestruct plugin.
         #
-        # variable_name - Name of the variable in the Awestruct Site containing
-        #                 the list of vimeo videos.
-        # layout        - Name of the layout to be used for the generated Pages.
+        # variable_name       - Name of the variable in the Awestruct Site containing
+        #                       the list of vimeo videos.
+        # layout              - Name of the layout to be used for the generated Pages.
+        # push_to_searchisko  - A boolean controlling whether a push to
+        #                       seachisko should happen. A push will not
+        #                       happen when the development profile is in
+        #                       use, regardless of the value of this 
+        #                       option.
         #
         # Returns a new instance of this extension.                
-        def initialize variable_name, layout
+        def initialize variable_name, layout, push_to_searchisko = true
           @variable = variable_name
           @layout = layout
+          @push_to_searchisko = push_to_searchisko
         end
 
         def execute site 
@@ -52,7 +58,7 @@ module Aweplug
             site.pages << page 
             
             unless (payload = video.searchisko_payload).nil?
-              unless site.profile =~ /development/
+              unless  !@push_to_searchisko || site.profile =~ /development/
                 searchisko.push_content(payload[:sys_type], 
                   video.id, 
                   payload.to_json)

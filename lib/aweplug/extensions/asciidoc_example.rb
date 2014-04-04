@@ -45,11 +45,16 @@ module Aweplug
       #                                    containing additional metadata about 
       #                                    the guide (default: value of 
       #                                    :output_dir).
+      #        :push_to_searchisko       - A boolean controlling whether a push to
+      #                                    seachisko should happen. A push will not
+      #                                    happen when the development profile is in
+      #                                    use, regardless of the value of this 
+      #                                    option.
       # Returns the created extension.
       def initialize(opts = {})
         required_keys = [:repository, :directory, :layout, :output_dir, :site_variable]
         opts = {additional_excludes: [], recurse_subdirectories: true, 
-                additional_metadata_keys: [], site_variable: opts[:output_dir]}.merge opts
+                additional_metadata_keys: [], site_variable: opts[:output_dir], push_to_searchisko: true}.merge opts
         missing_required_keys = required_keys - opts.keys
 
         raise ArgumentError.new "Missing required arguments #{missing_required_keys.join ', '}" unless missing_required_keys.empty?
@@ -62,6 +67,7 @@ module Aweplug
         @additional_excludes = opts[:additional_excludes]
         @directory = File.join opts[:repository], opts[:directory]
         @site_variable = opts[:site_variable]
+        @push_to_searchisko = opts[:push_to_searchisko]
       end
 
       # Internal: Execute method required by awestruct. Called during the
@@ -123,7 +129,7 @@ module Aweplug
             hash
           end
 
-          unless site.profile =~ /development/
+          unless !@push_to_searchisko || site.profile =~ /development/
             searchisko.push_content(searchisko_hash[:sys_type], 
                                     searchisko_hash[:sys_content_id], 
                                     searchisko_hash.to_json)
