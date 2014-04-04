@@ -208,8 +208,9 @@ module Aweplug
       # one contributor, the prototype object will be returned, and a
       # message logged to the console
       def get(prototype)
-        if @cache.has_key? prototype
-          @cache[prototype]
+        string_proto = prototype.to_s
+        if @cache.has_key? prototype.to_s
+          @cache[string_proto]
         else
           searchisko = Aweplug::Helpers::Searchisko.new({:base_url => @site.dcp_base_url,
                                                         :authenticate => false,
@@ -219,14 +220,14 @@ module Aweplug
           hits = JSON.load((searchisko.get("search?sys_type=contributor_profile&field=_source&#{query}")).body)['hits']
           if hits['hits'].length == 1
             json = hits['hits'][0]['_source']
-            @cache[prototype] = prototype.merge(Contributor.parse(json))
+            @cache[string_proto] = prototype.merge(Contributor.parse(json))
           elsif hits['hits'].length > 1
             contributors = hits['hits'].collect {|h| h['_source']['id']}.join(', ')
             puts "#{query} matches more than one contributor: #{contributors}"
-            @cache[prototype] = prototype
+            @cache[string_proto] = prototype
           else
             puts "#{query} does not match any contributors"
-            @cache[prototype] = prototype
+            @cache[string_proto] = prototype
           end
         end
       end
