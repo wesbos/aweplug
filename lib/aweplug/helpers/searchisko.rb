@@ -26,7 +26,7 @@ module Aweplug
             if opts[:searchisko_username] && opts[:searchisko_password]
               builder.request :basic_auth, opts[:searchisko_username], opts[:searchisko_password]
             else
-              $LOG.warn 'Missing username and / or password for searchisko'
+              $LOG.warn 'Missing username and / or password for searchisko' if $LOG.warn
             end
           end
           if (opts[:logger]) 
@@ -73,7 +73,11 @@ module Aweplug
       #
       # Returns the Faraday Response for the request.
       def get path, params = {}
-        @faraday.get "/v1/rest/" + path, params
+        response = @faraday.get "/v1/rest/" + path, params
+        unless response.success?
+          $LOG.warn "Error making searchisko request to #{path}. Status: #{response.status}. Params: #{params}" if $LOG.warn?
+        end
+          response
       end
 
       # Public: Posts content to Searchisko.
@@ -113,6 +117,14 @@ module Aweplug
         end
         if @logger && !resp.status.between?(200, 300)
           @logger.debug "response body: #{resp.body}"
+        end
+        unless resp.success?
+          if $LOG.warn?
+            $LOG.warn "Error making searchisko request to '#{path}'. Status: #{resp.status}. 
+                       Params: #{params}. Response body: #{resp.body}"
+          else
+            puts "No log error"
+          end
         end
       end
     end
