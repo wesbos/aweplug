@@ -5,8 +5,6 @@ require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
 require 'json'
 
-require 'pry'
-
 module Aweplug
   module Extensions
     module Kramdown
@@ -112,7 +110,6 @@ module Aweplug
               :github_repo_url => metadata[:github_repo_url]
             } 
 
-            binding.pry
             unless !@push_to_searchisko || site.profile =~ /development/
               searchisko.push_content(searchisko_hash[:sys_type], 
                 searchisko_hash[:sys_content_id], 
