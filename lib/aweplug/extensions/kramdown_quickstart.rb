@@ -5,6 +5,8 @@ require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
 require 'json'
 
+require 'pry'
+
 module Aweplug
   module Extensions
     module Kramdown
@@ -82,7 +84,7 @@ module Aweplug
             metadata = extract_metadata(file)
             metadata[:commits] = commit_info @repo, Pathname.new(file)
             metadata[:github_repo_url] = repository_url @repo
-            metadata[:contributors] = metadata[:commits].collect { |c| c[:author] }.uniq
+            metadata[:contributors] = metadata[:commits].collect { |c| c[:author_email] }.uniq
             metadata[:contributors].delete(metadata[:author])
             converted_html = metadata.delete :converted
 
@@ -110,6 +112,7 @@ module Aweplug
               :github_repo_url => metadata[:github_repo_url]
             } 
 
+            binding.pry
             unless !@push_to_searchisko || site.profile =~ /development/
               searchisko.push_content(searchisko_hash[:sys_type], 
                 searchisko_hash[:sys_content_id], 
