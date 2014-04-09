@@ -85,8 +85,7 @@ module Aweplug
           @cache = site.cache
           @access_token = access_token
           fetch_info
-          load_cast
-          fetch_thumb_url
+          load_thumb_url
           #log
         end
 
@@ -152,6 +151,9 @@ module Aweplug
         end
 
         def cast
+          unless @cast
+            load_cast
+          end
           @cast
         end
 
@@ -194,24 +196,30 @@ module Aweplug
         end
 
         def searchisko_payload
+          cast = []
           unless @fetch_failed
-            cast_as_hash = []
-            @cast.each do |c|
-              cast_as_hash << c.marshal_dump
+            if @video['cast']['member'].is_a? Array
+              @video['cast']['member'].each do |m|
+                if m['username'] != 'jbossdeveloper'
+                  cast << m['username']
+                end
+              end
+            elsif @video['cast']['member'] && @video['cast']['member']['username'] != 'jbossdeveloper'
+              cast << @video['cast']['member']
             end
-            author_as_hash = @cast[0] ? @cast[0].marshal_dump : {}
+            author = cast.length > 0 ? cast[0] : nil
             searchisko_payload = {
               :sys_title => title,
               :sys_description => description,
               :sys_url_view => "#{@site.base_url}/video/vimeo/#{id}",
-              :author => author_as_hash,
-              :contributors => cast_as_hash,
+              :author => author,
+              :contributors => cast.empty? ? nil : cast,
               :sys_created => upload_date_iso8601,
               :sys_last_activity_date => DateTime.parse(@video["modified_date"]).iso8601,
               :duration => duration_in_seconds,
               :thumbnail => thumb_url,
               :tags => tags
-            }
+            }.reject{ |k,v| v.nil? }
           end
         end
 
@@ -220,7 +228,7 @@ module Aweplug
           (a.length > 0 ? a[0].to_i : 0) + (a.length > 1 ? a[1].to_i * 60 : 0) + (a.length > 2 ? a[2].to_i * 60 : 0)
         end
 
-        def fetch_thumb_url
+        def load_thumb_url
           if @video['thumbnails']
             @thumb = @video["thumbnails"]["thumbnail"][1]
           else
