@@ -83,7 +83,8 @@ module Aweplug
             metadata = extract_metadata(file)
             metadata[:commits] = commit_info @repo, Pathname.new(file)
             metadata[:github_repo_url] = repository_url @repo
-            metadata[:contributors] = metadata[:commits].collect { |c| c[:author_email] }.uniq
+            metadata[:contributors] = metadata[:commits].collect { |c| c[:author] }.uniq
+            metadata[:contributors_email] = metadata[:commits].collect { |c| c[:author_email] }.uniq
             metadata[:contributors].delete(metadata[:author])
             metadata[:product] = @product if @product
             converted_html = metadata.delete :converted
@@ -103,7 +104,7 @@ module Aweplug
               :sys_type => 'jbossdeveloper_quickstart',
               :sys_content_type => 'quickstart',
               :sys_content_provider => 'jboss-developer',
-              :contributors => metadata[:contributors],
+              :contributors => metadata[:contributors_email],
               :author => metadata[:author],
               :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
               :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
