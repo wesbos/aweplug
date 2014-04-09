@@ -103,7 +103,7 @@ module Aweplug
                       :toc => doc.sections.inject([]) {|result, elm| result << {:id => elm.id, :text => elm.title}; result},
                       :github_repo_url => repository_url(@repo),
                       # Will need to strip html tags for summary
-                      :summary => doc.sections.first.render}
+                      :summary => doc.sections.first.blocks.first.content}
 
           page.send('metadata=', metadata)
           site.pages << page
