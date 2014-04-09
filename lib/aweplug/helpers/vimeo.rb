@@ -147,7 +147,7 @@ module Aweplug
         end
 
         def author
-          @cast[0] ? @cast[0] : OpenStruct.new({"display_name" => "Unknown"})
+          cast[0] ? cast[0] : OpenStruct.new({"display_name" => "Unknown"})
         end
 
         def cast
