@@ -54,6 +54,7 @@ module Aweplug
           @site_variable = opts[:site_variable] || opts[:output_dir]
           @excludes = opts[:excludes] || []
           @push_to_searchisko = opts[:push_to_searchisko] || true
+          @product = opts[:product]
         end
 
         # Internal: Execute method required by awestruct. Called during the
@@ -84,6 +85,7 @@ module Aweplug
             metadata[:github_repo_url] = repository_url @repo
             metadata[:contributors] = metadata[:commits].collect { |c| c[:author_email] }.uniq
             metadata[:contributors].delete(metadata[:author])
+            metadata[:product] = @product if @product
             converted_html = metadata.delete :converted
 
             page.send 'metadata=', metadata
