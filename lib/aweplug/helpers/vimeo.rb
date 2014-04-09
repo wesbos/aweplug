@@ -204,7 +204,6 @@ module Aweplug
               :sys_title => title,
               :sys_description => description,
               :sys_url_view => "#{@site.base_url}/video/vimeo/#{id}",
-              :sys_type => 'jbossdeveloper_video',
               :author => author_as_hash,
               :contributors => cast_as_hash,
               :sys_created => upload_date_iso8601,

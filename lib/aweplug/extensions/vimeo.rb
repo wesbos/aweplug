@@ -59,7 +59,7 @@ module Aweplug
             
             unless (payload = video.searchisko_payload).nil?
               unless  !@push_to_searchisko || site.profile =~ /development/
-                searchisko.push_content(payload[:sys_type], 
+                searchisko.push_content('jbossdeveloper_vimeo', 
                   video.id, 
                   payload.to_json)
               end 
