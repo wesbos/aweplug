@@ -205,7 +205,7 @@ module Aweplug
                 end
               end
             elsif @video['cast']['member'] && @video['cast']['member']['username'] != 'jbossdeveloper'
-              cast << @video['cast']['member']
+              cast << @video['cast']['member']['username']
             end
             author = cast.length > 0 ? cast[0] : nil
             searchisko_payload = {
