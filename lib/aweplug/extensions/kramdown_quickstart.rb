@@ -94,28 +94,22 @@ module Aweplug
             searchisko_hash = 
             {
               :sys_title => metadata[:title], 
-              :sys_content_id => Digest::SHA1.hexdigest(metadata[:title])[0..7], # maybe change?
               :level => metadata[:level],
               :tags => metadata[:technologies],
               :sys_description => metadata[:summary],
               :sys_content => converted_html, 
               :sys_url_view => "#{site.base_url}#{site.ctx_root.nil? ? '/' : '/' + site.ctx_root + '/'}#{page.output_path}",
-              :"sys_content_content-type" => 'text/html',
-              :sys_type => 'jbossdeveloper_quickstart',
-              :sys_content_type => 'quickstart',
-              :sys_content_provider => 'jboss-developer',
               :contributors => metadata[:contributors_email],
               :author => metadata[:author],
               :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
               :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
-              :sys_updated => metadata[:commits].collect { |c| DateTime.parse c[:date] }.first,
               :target_product => metadata[:target_product],
               :github_repo_url => metadata[:github_repo_url]
             } 
 
             unless !@push_to_searchisko || site.profile =~ /development/
-              searchisko.push_content(searchisko_hash[:sys_type], 
-                searchisko_hash[:sys_content_id], 
+              searchisko.push_content('jbossdeveloper_quickstart', 
+                Digest::SHA1.hexdigest(metadata[:title])[0..7], 
                 searchisko_hash.to_json)
             end
           end
