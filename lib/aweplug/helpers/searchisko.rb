@@ -3,6 +3,28 @@ require 'faraday_middleware'
 require 'aweplug/cache/yaml_file_cache'
 require 'logger'
 
+# WARNING: monkey patching faraday
+# TODO: See if we can the new refinements to work
+module Faraday
+  module Utils
+    def build_nested_query(value, prefix = nil)
+      case value
+      when Array
+        value.map { |v| build_nested_query(v, "#{prefix}") }.join("&")
+      when Hash
+        value.map { |k, v|
+          build_nested_query(v, prefix ? "#{prefix}%5B#{escape(k)}%5D" : escape(k))
+        }.join("&")
+      when NilClass
+        prefix
+      else
+        raise ArgumentError, "value must be a Hash" if prefix.nil?
+        "#{prefix}=#{escape(value)}"
+      end
+    end
+  end
+end
+
 module Aweplug
   module Helpers
     # Public: A helper class for using Searchisko.
@@ -36,6 +58,7 @@ module Aweplug
               builder.response :logger, @logger = ::Logger.new('_tmp/faraday.log', 'daily')
             end
           end
+          builder.request :url_encoded
           builder.response :raise_error if opts[:raise_error]
           builder.use FaradayMiddleware::Caching, opts[:cache], {}
           #builder.response :json, :content_type => /\bjson$/
