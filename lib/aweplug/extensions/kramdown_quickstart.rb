@@ -77,7 +77,11 @@ module Aweplug
                                                          :logger => site.log_faraday})
           Dir["#{@repo}/*/README.md"].each do |file|
             next if @excludes.include?(File.dirname(file))
-            
+
+            # Skip if the site already has this page
+            output_path = File.join @output_dir, Pathname.new(file).relative_path_from(Pathname.new @repo).dirname, 'index.html' 
+            next if site.pages.find {|p| p.output_path == output_path}
+
             page = add_to_site site, file
 
             metadata = extract_metadata(file)

@@ -46,12 +46,17 @@ module Aweplug
           site[@variable].each do |url|
             id = url.match(/^.*\/(\d*)$/)[1] 
             page_path = Pathname.new(File.join 'video', 'vimeo', "#{id}.html")
+
+            # Skip if the site already has this page
+            next if site.pages.find {|p| p.source_path == page_path}
+
             page = ::Awestruct::Page.new(site,
                      ::Awestruct::Handlers::LayoutHandler.new(site,
                        ::Awestruct::Handlers::TiltHandler.new(site,
                          ::Aweplug::Handlers::SyntheticHandler.new(site, '', page_path))))
             page.layout = @layout
             page.output_path = File.join 'video', 'vimeo', id,'index.html'
+            page.stale_output_callback = ->(page) { return (File.exist?(page.output_path) && File.mtime(__FILE__) > File.mtime(page.output_path)) }
             video = Aweplug::Helpers::Vimeo::Video.new url, access_token, site
             page.send('video=', video)
             page.send('video_url=', url)
