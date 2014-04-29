@@ -93,10 +93,7 @@ module Aweplug
 
           Find.prune if File.extname(path) !~ /\.a(scii)?doc/ || @additional_excludes.include?(File.basename path)
 
-          # Skip adding the page to the site if it's already there
-          if (site.pages.find {|p| p.source_path == path})
-            next
-          end
+          # TODO: Skip adding the page to the site if it's already there
 
           page = site.engine.load_site_page path
           page.layout = @layout
