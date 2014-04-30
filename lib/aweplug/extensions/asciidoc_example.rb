@@ -97,7 +97,7 @@ module Aweplug
 
           page = site.engine.load_site_page path
           page.layout = @layout
-          page.output_path = File.join(@output_dir, File.basename(page.output_path))
+          page.output_path = File.join(@output_dir, File.basename(page.output_path, File.extname(page.output_path)), 'index.html')
 
           doc = Asciidoctor.load_file path
           metadata = {:author => doc.author, :commits => commit_info(@repo, path), 
