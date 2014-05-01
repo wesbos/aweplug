@@ -97,6 +97,7 @@ module Aweplug
 
           page = site.engine.load_site_page path
           page.layout = @layout
+          # TODO: Set the imagedir attribute for the page
           page.output_path = File.join(@output_dir, File.basename(page.output_path, File.extname(page.output_path)), 'index.html')
 
           doc = Asciidoctor.load_file path
@@ -105,10 +106,16 @@ module Aweplug
                       :toc => doc.sections.inject([]) {|result, elm| result << {:id => elm.id, :text => elm.title}; result},
                       :github_repo_url => repository_url(@repo),
                       # Will need to strip html tags for summary
-                      :summary => doc.sections.first.blocks.first.content}
+                      :summary => doc.sections.first.blocks.first.content,
+                      images: find_images(doc)
+                    }
 
           page.send('metadata=', metadata)
           site.pages << page
+
+          metadata[:images].each do |image|
+            add_image_to_site site, image
+          end
 
           searchisko_hash = {
             :sys_title => metadata[:title], 
@@ -132,6 +139,36 @@ module Aweplug
           end
         end
       end
+
+      # Internal: Finds images in the document.
+      #
+      # el     - Asciidoctor::AbstractNode instance
+      # images - Set of image paths
+      #
+      # Returns the Set of image paths.
+      def find_images el, images = Set.new
+        if el.respond_to? :blocks
+          el.blocks.each {|elem| find_images elem, images}
+        end
+        if ((el.respond_to? :context) && (el.context == :image))
+          images << el.attr(:target)
+        end
+        images
+      end
+
+      # Internal: Adds the image to the site.
+      #
+      # site - The Site from awestruct.
+      # file - The String of the image path
+      #
+      # Returns nothing
+      def add_image_to_site(site, image)
+        page = site.engine.load_site_page Pathname.new(@directory).join(image)
+        page.output_path = File.join 'images', image
+        puts page.output_path
+        site.pages << page
+      end
+
     end
   end
 end

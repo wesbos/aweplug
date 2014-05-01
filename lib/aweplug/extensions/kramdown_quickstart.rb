@@ -1,9 +1,11 @@
 require 'pathname'
+require 'set'
+require 'json'
+
 require 'kramdown'
 require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
-require 'json'
 
 module Aweplug
   module Extensions
@@ -93,6 +95,13 @@ module Aweplug
             metadata[:product] = @product if @product
             converted_html = metadata.delete :converted
 
+            unless metadata[:images].empty?
+              metadata[:images].each do |img|
+                image_path = Pathname.new(@repo).join(img) 
+                add_image_to_site(site, image_path) if File.exist? image_path
+              end
+            end
+
             page.send 'metadata=', metadata
             
             searchisko_hash = 
@@ -117,6 +126,22 @@ module Aweplug
                 searchisko_hash.to_json)
             end
           end
+          # Add the main readme
+          if File.exist? "#{@repo}/README.md"
+            index = add_to_site site, "#{@repo}/README.md"
+            metadata = extract_metadata("#{@repo}/README.md")
+            index.send 'metadata=', metadata
+          end
+          # Add the contributing
+          if File.exist? "#{@repo}/CONTRIBUTING.md"
+            contribute = add_to_site site, "#{@repo}/CONTRIBUTING.md"
+            metadata = extract_metadata("#{@repo}/CONTRIBUTING.md")
+
+            # Little bit of C&P to change the  output path, probably a better way
+            page_path = Pathname.new "#{@repo}/CONTRIBUTING.md"
+            contribute.output_path = File.join @output_dir, page_path.relative_path_from(Pathname.new @repo).dirname, 'contributing', 'index.html'
+            contribute.send 'metadata=', metadata
+          end
         end
 
 
@@ -135,12 +160,26 @@ module Aweplug
             {:id => t.attr[:id], :text => t.value.children.first.value}
           end
 
+
           metadata = document.root.options[:metadata]
           metadata[:toc] = toc_items
           metadata[:converted] = document.to_html
           metadata[:technologies] = metadata[:technologies].split(",")
+          metadata[:images] = find_images(document.root)
           metadata
         end
+
+        # Private: Depth first traversal of Kramdown tree to find images.
+        #
+        # el     - Kramdown::Element
+        # images - Array of image sources
+        def find_images el, images = Set.new
+          el.children.each {|elem| find_images elem, images}
+          if el.type == :img
+            images << el.attr['src']
+          end
+          images
+        end 
 
         # Private: Adds the Page to the site.
         #
@@ -155,6 +194,19 @@ module Aweplug
           page.output_path = File.join @output_dir, page_path.relative_path_from(Pathname.new @repo).dirname, 'index.html'
           site.pages << page
           page
+        end
+
+        # Private: Adds the image to the site.
+        #
+        # site - The Site from awestruct.
+        # file - The String of the image path
+        #
+        # Returns nothing
+        def add_image_to_site(site, image)
+          page_path = Pathname.new image
+          page = site.engine.load_site_page image
+          page.output_path = File.join @output_dir, page_path.relative_path_from(Pathname.new @repo).dirname, File.basename(image)
+          site.pages << page
         end
 
         # Private: Parses the file through Kramdown.
