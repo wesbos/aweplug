@@ -165,7 +165,6 @@ module Aweplug
       def add_image_to_site(site, image)
         page = site.engine.load_site_page Pathname.new(@directory).join(image)
         page.output_path = File.join 'images', image
-        puts page.output_path
         site.pages << page
       end
 
