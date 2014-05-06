@@ -110,7 +110,6 @@ module Aweplug
                       images: find_images(doc)
                     }
 
-          page.send('metadata=', metadata)
           site.pages << page
 
           metadata[:images].each do |image|
@@ -132,11 +131,12 @@ module Aweplug
             hash
           end
 
+          metadata[:id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
+          metadata[:dcptype] = 'jbossdeveloper_example'
           unless !@push_to_searchisko || site.profile =~ /development/
-            searchisko.push_content('jbossdeveloper_example', 
-                                    Digest::SHA1.hexdigest(metadata[:title])[0..7], 
-                                    searchisko_hash.to_json)
+            searchisko.push_content('jbossdeveloper_example', metadata[:id], searchisko_hash.to_json)
           end
+          page.send('metadata=', metadata)
         end
       end
 

@@ -101,8 +101,6 @@ module Aweplug
                 add_image_to_site(site, image_path) if File.exist? image_path
               end
             end
-
-            page.send 'metadata=', metadata
             
             searchisko_hash = 
             {
@@ -120,11 +118,14 @@ module Aweplug
               :github_repo_url => metadata[:github_repo_url]
             } 
 
+
+            metadata[:id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
+            metadata[:dcptype] = 'jbossdeveloper_quickstart'
             unless !@push_to_searchisko || site.profile =~ /development/
-              searchisko.push_content('jbossdeveloper_quickstart', 
-                Digest::SHA1.hexdigest(metadata[:title])[0..7], 
-                searchisko_hash.to_json)
+              searchisko.push_content('jbossdeveloper_quickstart', metadata[:id], searchisko_hash.to_json)
             end
+
+            page.send 'metadata=', metadata
           end
           # Add the main readme
           if File.exist? "#{@repo}/README.md"
