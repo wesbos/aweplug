@@ -162,16 +162,16 @@ module Aweplug
         alias :super_local_content :local_content
 
         def local_content(src)
-          if File.exists? src
+          scss = src.gsub(/\.css$/, ".scss")
+          if File.exists? scss
+            puts "Loading styles for #{scss}"
+            super_local_content(scss)
+          elsif File.exists? src
+            puts "Loading styles for #{src}"
             super_local_content(src)
           else
-            scss = src.gsub(/\.css$/, ".scss")
-            if File.exists? scss
-              super_local_content(scss)
-            else
-              raise "Unable to locate file for #{src}"
-            end
-         end
+            raise "Unable to locate file for #{src}"
+          end
         end
 
         def ctx_path
