@@ -93,6 +93,8 @@ module Aweplug
             metadata[:contributors_email] = metadata[:commits].collect { |c| c[:author_email] }.uniq
             metadata[:contributors].delete(metadata[:author])
             metadata[:product] = @product if @product
+            metadata[:searchisko_id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
+            metadata[:searchisko_type] = 'jbossdeveloper_quickstart'
             converted_html = metadata.delete :converted
 
             unless metadata[:images].empty?
@@ -119,10 +121,10 @@ module Aweplug
             } 
 
 
-            metadata[:id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
-            metadata[:dcptype] = 'jbossdeveloper_quickstart'
             unless !@push_to_searchisko || site.profile =~ /development/
-              searchisko.push_content('jbossdeveloper_quickstart', metadata[:id], searchisko_hash.to_json)
+              searchisko.push_content(metadata[:searchisko_type], 
+                metadata[:searchisko_id], 
+                searchisko_hash.to_json)
             end
 
             page.send 'metadata=', metadata

@@ -164,10 +164,8 @@ module Aweplug
         def local_content(src)
           scss = src.gsub(/\.css$/, ".scss")
           if File.exists? scss
-            puts "Loading styles for #{scss}"
             super_local_content(scss)
           elsif File.exists? src
-            puts "Loading styles for #{src}"
             super_local_content(src)
           else
             raise "Unable to locate file for #{src}"
