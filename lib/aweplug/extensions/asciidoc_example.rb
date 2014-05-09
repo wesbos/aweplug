@@ -107,6 +107,8 @@ module Aweplug
                       :github_repo_url => repository_url(@repo),
                       # Will need to strip html tags for summary
                       :summary => doc.sections.first.blocks.first.content,
+                      :searchisko_type => 'jbossdeveloper_example',
+                      :searchisko_id => Digest::SHA1.hexdigest(doc.doctitle)[0..7],
                       images: find_images(doc)
                     }
 
@@ -131,10 +133,10 @@ module Aweplug
             hash
           end
 
-          metadata[:id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
-          metadata[:dcptype] = 'jbossdeveloper_example'
           unless !@push_to_searchisko || site.profile =~ /development/
-            searchisko.push_content('jbossdeveloper_example', metadata[:id], searchisko_hash.to_json)
+            searchisko.push_content(metadata[:searchisko_type],
+                                    metadata[:searchisko_id],
+                                    searchisko_hash.to_json)
           end
           page.send('metadata=', metadata)
         end
