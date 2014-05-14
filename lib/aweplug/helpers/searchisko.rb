@@ -100,7 +100,7 @@ module Aweplug
         unless response.success?
           $LOG.warn "Error making searchisko request to #{path}. Status: #{response.status}. Params: #{params}" if $LOG.warn?
         end
-          response
+        response
       end
 
       # Public: Posts content to Searchisko.
@@ -138,15 +138,16 @@ module Aweplug
             @logger.debug "request body: #{req.body}"
           end
         end
-        if @logger && !resp.status.between?(200, 300)
+        body = JSON.parse(resp.body)
+        if @logger && (!resp.status.between?(200, 300) || body.has_key?("warnings"))
           @logger.debug "response body: #{resp.body}"
         end
-        unless resp.success?
-          if $LOG.warn?
+        if $LOG.warn?
+          if !resp.success?
             $LOG.warn "Error making searchisko request to '#{path}'. Status: #{resp.status}. 
                        Params: #{params}. Response body: #{resp.body}"
-          else
-            puts "No log error"
+          elsif body.has_key? "warnings"
+            $LOG.warn "Searchisko content POST to '#{path}' succeeded with warnings: #{body["warnings"]}"
           end
         end
       end
