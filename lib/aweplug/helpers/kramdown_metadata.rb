@@ -23,6 +23,7 @@ module Kramdown
         @block_parsers.unshift :summary_metadata
         @block_parsers.unshift :product_metadata
         @block_parsers.unshift :title_hack_metadata
+        @block_parsers.unshift :pre_reqs
 
         @root.options[:metadata] = {:author => '', :level => '',
                                     :technologies => '', :target_product => '',
@@ -44,7 +45,7 @@ module Kramdown
         add_text(text, el)
         el.attr['id'] = id if id
         
-        @root.options[:metadata][:title] = text
+        @root.options[:metadata][:title] = text.split(':').last.strip
         #@tree.children << el
         true
       end
@@ -98,6 +99,13 @@ module Kramdown
         @root.options[:metadata][:product] = @src[2].rstrip
       end
       define_parser(:product_metadata, /^(Product Versions:)#{OPT_SPACE}(.*?)\s*?\n/)
+
+      # Internal: Parses the pre-reqs to add to the metadata Hash.
+      def parse_pre_reqs
+        @src.pos += @src.matched_size
+        @root.options[:metadata][:prereq] = @src[2].rstrip
+      end
+      define_parser(:pre_reqs, /^(Prerequisites:)#{OPT_SPACE}(.*?)\s*?\n/)
     end
   end
 end
