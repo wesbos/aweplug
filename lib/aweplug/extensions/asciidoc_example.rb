@@ -2,6 +2,7 @@ require 'pathname'
 require 'asciidoctor'
 require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/searchisko'
+require 'aweplug/helpers/cdn'
 require 'json'
 
 module Aweplug
@@ -114,8 +115,13 @@ module Aweplug
 
           site.pages << page
 
+          unless metadata[:images].empty?
+            cdn = Aweplug::Helpers::CDN.new(File.join('images', File.dirname(metadata[:images].first)))
+          end
           metadata[:images].each do |image|
             add_image_to_site site, image
+            cdn.version(File.basename(image, File.extname(image)), File.extname(image), 
+                        File.binread(Pathname.new(@directory).join(image)))
           end
 
           searchisko_hash = {
