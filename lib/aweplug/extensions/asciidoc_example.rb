@@ -110,19 +110,9 @@ module Aweplug
                       :summary => doc.sections.first.blocks.first.content,
                       :searchisko_type => 'jbossdeveloper_example',
                       :searchisko_id => Digest::SHA1.hexdigest(doc.doctitle)[0..7],
-                      images: find_images(doc)
                     }
 
           site.pages << page
-
-          unless metadata[:images].empty?
-            cdn = Aweplug::Helpers::CDN.new(File.join('images', File.dirname(metadata[:images].first)))
-          end
-          metadata[:images].each do |image|
-            add_image_to_site site, image
-            cdn.version(File.basename(image, File.extname(image)), File.extname(image), 
-                        File.binread(Pathname.new(@directory).join(image)))
-          end
 
           searchisko_hash = {
             :sys_title => metadata[:title], 
@@ -147,35 +137,6 @@ module Aweplug
           page.send('metadata=', metadata)
         end
       end
-
-      # Internal: Finds images in the document.
-      #
-      # el     - Asciidoctor::AbstractNode instance
-      # images - Set of image paths
-      #
-      # Returns the Set of image paths.
-      def find_images el, images = Set.new
-        if el.respond_to? :blocks
-          el.blocks.each {|elem| find_images elem, images}
-        end
-        if ((el.respond_to? :context) && (el.context == :image))
-          images << el.attr(:target)
-        end
-        images
-      end
-
-      # Internal: Adds the image to the site.
-      #
-      # site - The Site from awestruct.
-      # file - The String of the image path
-      #
-      # Returns nothing
-      def add_image_to_site(site, image)
-        page = site.engine.load_site_page Pathname.new(@directory).join(image)
-        page.output_path = File.join 'images', image
-        site.pages << page
-      end
-
     end
   end
 end
