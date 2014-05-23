@@ -102,8 +102,10 @@ module Aweplug
           page.output_path = File.join(@output_dir, File.basename(page.output_path, File.extname(page.output_path)), 'index.html')
 
           doc = Asciidoctor.load_file path
-          metadata = {:author => doc.author, :commits => commit_info(@repo, path), 
-                      :title => doc.doctitle, :tags => doc.attributes['tags'],
+          metadata = {:author => doc.author, 
+                      :commits => commit_info(@repo, path), 
+                      :title => doc.doctitle, 
+                      :tags => doc.attributes['tags'],
                       :toc => doc.sections.inject([]) {|result, elm| result << {:id => elm.id, :text => elm.title}; result},
                       :github_repo_url => repository_url(@repo),
                       # Will need to strip html tags for summary
