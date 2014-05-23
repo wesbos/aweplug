@@ -104,6 +104,7 @@ module Aweplug
           doc = Asciidoctor.load_file path
           metadata = {:author => doc.author, 
                       :commits => commit_info(@repo, path), 
+                      :current_tag => current_tag(@repo, path),
                       :title => doc.doctitle, 
                       :tags => doc.attributes['tags'],
                       :toc => doc.sections.inject([]) {|result, elm| result << {:id => elm.id, :text => elm.title}; result},
