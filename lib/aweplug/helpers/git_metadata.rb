@@ -38,7 +38,19 @@ module Aweplug
           # Returns the most recent tag
           def current_tag (repo_root, file_path)
             o, _ = Open3.capture2(%Q[git --git-dir=#{repo_root}/.git describe --tags --always])
-            o
+            o.strip
+          end
+
+          # Public: Retrieves the most recent branch reachable from the commit
+          # by executing git rev-parse --abbrev-ref HEAD. See git-rev-parse(1) for a full explanation.
+          #
+          # repo_root - The directory (relative to the site base) containing the git repo
+          # file_path - Path to the file being processed, relative to the site base
+          #
+          # Returns the current branch
+          def current_branch (repo_root, file_path)
+            o, _ = Open3.capture2(%Q[git --git-dir=#{repo_root}/.git rev-parse --abbrev-ref HEAD])
+            o.strip
           end
         end
       end
