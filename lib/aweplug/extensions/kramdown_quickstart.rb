@@ -89,6 +89,7 @@ module Aweplug
             metadata = extract_metadata(file)
             metadata[:commits] = commit_info @repo, Pathname.new(file)
             metadata[:current_tag] = current_tag @repo, Pathname.new(file)
+            metadata[:current_branch] = current_branch @repo, Pathname.new(file)
             metadata[:github_repo_url] = repository_url @repo
             metadata[:contributors] = metadata[:commits].collect { |c| c[:author] }.uniq
             metadata[:contributors_email] = metadata[:commits].collect { |c| c[:author_email] }.uniq
