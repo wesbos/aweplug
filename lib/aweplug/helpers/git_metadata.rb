@@ -28,6 +28,18 @@ module Aweplug
             o, _ = Open3.capture2(%Q[git --git-dir=#{repo_root}/.git log --date=iso --format='{"author":"%an","author_email":"%ae","date":"%ai","hash":"%h","subject":"%f"}' -- #{file_path.to_s.sub(/#{repo_root}\//, '')}])
             o.split("\n").map{ |l| JSON.parse l, :symbolize_names => true }
           end
+
+          # Public: Retrieves the most recent tag (annotated or non-annotated reachable from the commit
+          # by executing git describe --tags --always. See git-describe(1) for a full explanation.
+          #
+          # repo_root - The directory (relative to the site base) containing the git repo
+          # file_path - Path to the file being processed, relative to the site base
+          #
+          # Returns the most recent tag
+          def current_tag (repo_root, file_path)
+            o, _ = Open3.capture2(%Q[git --git-dir=#{repo_root}/.git describe --tags --always])
+            o
+          end
         end
       end
     end
