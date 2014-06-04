@@ -96,7 +96,7 @@ module Aweplug
             metadata[:contributors].delete(metadata[:author])
             metadata[:product] = @product if @product
             metadata[:searchisko_id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
-            metadata[:searchisko_type] = 'jbossdeveloper_quickstart'
+            metadata[:searchisko_type] = 'quickstart'
             converted_html = metadata.delete :converted
 
             unless metadata[:images].empty?

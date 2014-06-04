@@ -112,7 +112,7 @@ module Aweplug
                       :github_repo_url => repository_url(@repo),
                       # Will need to strip html tags for summary
                       :summary => doc.sections.first.blocks.first.content,
-                      :searchisko_type => 'jbossdeveloper_example',
+                      :searchisko_type => 'example',
                       :searchisko_id => Digest::SHA1.hexdigest(doc.doctitle)[0..7],
                     }
 
