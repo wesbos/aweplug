@@ -1,4 +1,5 @@
 require 'asciidoctor'
+require 'awestruct/handlers/interpolation_handler'
 
 module Aweplug
   module Extensions
@@ -16,7 +17,7 @@ module Aweplug
       def execute site
         site.pages.each do |page|
           if page.content_syntax =~ /^a(sc)?(ii)?(d(oc)?)?$/
-            sections = Asciidoctor.load(page.raw_content).sections
+            sections = Asciidoctor.load(interpolated_content page).sections
             sections.each do |s|
               r = String.new
               s.blocks.each {|b| r << b.render}
@@ -24,6 +25,27 @@ module Aweplug
             end
           end
         end
+      end
+
+      private
+
+      # Private: Retreives the interpolated content if the InterpolationHandler
+      # is in the handler chain.
+      #
+      # page - Awestruct Page object.
+      #
+      # Returns either the raw content for the page, or the interpolated
+      # content.
+      def interpolated_content page 
+        handler = page.handler
+
+        until (handler.nil?)
+          handler = handler.delegate
+          if handler.class == ::Awestruct::Handlers::InterpolationHandler
+            return handler.rendered_content page.create_context(page.raw_content)
+          end
+        end
+        page.raw_content
       end
     end
   end
