@@ -9,7 +9,7 @@ module Aweplug
     class AsciidocCdnTransformer 
       def transform(site, page, input)
         if (!site.cdn_http_base.nil? && (is_asciidoc? page) && page.output_extension == '.html') 
-          resource = ::Aweplug::Helpers::Resources::SingleResource.new site.dir, site.cdn_http_base, site.minify 
+          resource = ::Aweplug::Helpers::Resources::SingleResource.new site.dir, site.cdn_http_base, site.cdn_out_dir, site.minify, site.version 
 
           doc = Nokogiri::HTML(input)
           doc.css('img').each do |img|

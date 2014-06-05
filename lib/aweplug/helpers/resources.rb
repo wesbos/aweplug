@@ -41,7 +41,7 @@ module Aweplug
                   content = compress(content)
                 end
                 file_ext = ext                
-                filename = Aweplug::Helpers::CDN.new(ctx_path).version(id, file_ext, content)
+                filename = Aweplug::Helpers::CDN.new(ctx_path, @site.cdn_out_dir, @site.cdn_version).add(id, file_ext, content)
                 @@cache[src] << tag("#{@site.cdn_http_base}/#{ctx_path}/#{filename}")
               end
             end
@@ -183,9 +183,11 @@ module Aweplug
         IMG_EXT = ['.png', '.jpeg', '.jpg', '.gif']
         FONT_EXT = ['.otf', '.eot', '.svg', '.ttf', '.woff']
 
-        def initialize(base_path, cdn_http_base, minify)
+        def initialize(base_path, cdn_http_base, cdn_out_dir, minify, version)
           @base = base_path
           @cdn_http_base = cdn_http_base
+          @cdn_out_dir = cdn_out_dir
+          @version = version
           @minify = minify
         end
 
@@ -215,7 +217,7 @@ module Aweplug
           end
           id = uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
           ctx_path = ctx_path file_ext
-          cdn_name = Aweplug::Helpers::CDN.new(ctx_path).version(id, file_ext, content)
+          cdn_name = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, content)
           res = URI.parse("#{@cdn_http_base}/#{ctx_path}/#{cdn_name}")
           res.query = uri.query if uri.query
           res.fragment = uri.fragment if uri.fragment
@@ -270,7 +272,7 @@ module Aweplug
           if src =~ Resources::local_path_pattern(site.base_url)
             src = $1
           end
-          SingleResource.new(site.dir, site.cdn_http_base, site.minify).path(src)
+          SingleResource.new(site.dir, site.cdn_http_base, site.cdn_out_dir, site.minify, site.cdn_version).path(src)
         else
           src
         end
@@ -284,7 +286,7 @@ module Sass::Script::Functions
 
   def cdn(src)
     if @options[:cdn_http_base]
-      Sass::Script::String.new(Aweplug::Helpers::Resources::SingleResource.new(@options[:original_filename].to_s, @options[:cdn_http_base].to_s, @options[:minify]).url(unquote(src).to_s))
+      Sass::Script::String.new(Aweplug::Helpers::Resources::SingleResource.new(@options[:original_filename].to_s, @options[:cdn_http_base].to_s, @options[:cdn_out_dir].to_s, @options[:minify], @options[:cdn_version]).url(unquote(src).to_s))
     else
       Sass::Script::String.new("url(#{src.to_s})")
     end
