@@ -9,23 +9,42 @@ module Aweplug
     # _tmp/cdn with new file name, and return that file name
     class CDN
 
-      TMP_DIR = Pathname.new("_tmp").join("cdn")
-      DIR = Pathname.new("_cdn")
-      CONTROL = DIR.join("cdn.yml")
-      EXPIRES_FILE = DIR.join("cdn_expires.htaccess")
+      attr_accessor :control, :tmp_dir
 
-      def initialize(ctx_path)
-        @tmp_dir = TMP_DIR.join ctx_path
-        FileUtils.mkdir_p(File.dirname(CONTROL))
+      DIR = Pathname.new("_cdn")
+      EXPIRES_FILE = DIR.join("cdn_expires.htaccess")
+      ENV_PREFIX = ENV['cdn_prefix']
+
+      def initialize(ctx_path, cdn_out_dir, version)
+        @version = version
+        unless ENV_PREFIX.nil?
+          out_dir = Pathname.new(cdn_out_dir).join(ENV_PREFIX).join("cdn")
+          control_dir = DIR.join(ENV_PREFIX)
+        else
+          out_dir = Pathname.new(cdn_out_dir).join("cdn")
+          control_dir = DIR
+        end
+        @control = control_dir.join("cdn.yml")
+        @tmp_dir = out_dir.join ctx_path
+        FileUtils.mkdir_p(File.dirname(@control))
         FileUtils.mkdir_p(@tmp_dir)
         if File.exists? EXPIRES_FILE
           FileUtils.cp(EXPIRES_FILE, @tmp_dir.join(".htaccess"))
         end
       end
 
+      def add(name, ext, content) 
+        if @version
+          version(name, ext, content)
+        else
+          File.open(@tmp_dir.join(name + ext), 'w') { |file| file.write(content) }
+          name + ext
+        end
+      end
+
       def version(name, ext, content)
         id = name + ext
-        yml = YAML::Store.new CONTROL
+        yml = YAML::Store.new @control
         yml.transaction do
           yml[id] ||= { "build_no" => 0 }
           md5sum = Digest::MD5.hexdigest(content)
