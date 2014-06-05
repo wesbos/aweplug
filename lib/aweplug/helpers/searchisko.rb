@@ -112,7 +112,7 @@ module Aweplug
       #
       # Examples
       #
-      #   searchisko.push_content 'bom', id, content_hash
+      #   searchisko.push_content 'jbossdeveloper_bom', id, content_hash
       #   # => Faraday Response
       #
       # Returns a Faraday Response from the POST.
