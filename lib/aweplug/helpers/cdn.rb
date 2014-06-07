@@ -17,8 +17,9 @@ module Aweplug
 
       def initialize(ctx_path, cdn_out_dir, version)
         @version = version
+        @ctx_path = ctx_path
         unless ENV_PREFIX.nil?
-          out_dir = Pathname.new(cdn_out_dir).join(ENV_PREFIX).join("cdn")
+          out_dir = Pathname.new(cdn_out_dir).join("cdn").join(ENV_PREFIX)
           control_dir = DIR.join(ENV_PREFIX)
         else
           out_dir = Pathname.new(cdn_out_dir).join("cdn")
@@ -38,7 +39,7 @@ module Aweplug
           version(name, ext, content)
         else
           File.open(@tmp_dir.join(name + ext), 'w') { |file| file.write(content) }
-          name + ext
+          name(name, ext)
         end
       end
 
@@ -53,7 +54,18 @@ module Aweplug
             build_no = yml[id]["build_no"] += 1
             File.open(@tmp_dir.join(name + "-" + build_no.to_s + ext), 'w') { |file| file.write(content) }
           end
-          name + "-" + yml[id]["build_no"].to_s + ext
+          name(name, ext, yml[id]["build_no"].to_s)
+        end
+      end
+
+      def name(name, ext, build_no = nil)
+        unless build_no.nil?
+          name = name + "-" + build_no
+        end
+        unless ENV_PREFIX.nil?
+          Pathname.new(ENV_PREFIX).join(@ctx_path).join(name + ext).to_s
+        else
+          Pathname.new(@ctx_path).join(name + ext)
         end
       end
    
