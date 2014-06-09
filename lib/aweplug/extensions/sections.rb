@@ -17,7 +17,7 @@ module Aweplug
       def execute site
         site.pages.each do |page|
           if page.content_syntax =~ /^a(sc)?(ii)?(d(oc)?)?$/
-            sections = Asciidoctor.load(interpolated_content page).sections
+            sections = Asciidoctor.load(interpolated_content(page), {sectanchors: ''}).sections
             sections.each do |s|
               r = String.new
               s.blocks.each {|b| r << b.render}
