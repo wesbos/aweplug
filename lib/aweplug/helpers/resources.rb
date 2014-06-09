@@ -41,8 +41,8 @@ module Aweplug
                   content = compress(content)
                 end
                 file_ext = ext                
-                filename = Aweplug::Helpers::CDN.new(ctx_path, @site.cdn_out_dir, @site.cdn_version).add(id, file_ext, content)
-                @@cache[src] << tag("#{@site.cdn_http_base}/#{ctx_path}/#{filename}")
+                cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @site.cdn_out_dir, @site.cdn_version).add(id, file_ext, content)
+                @@cache[src] << tag("#{@site.cdn_http_base}/#{cdn_file_path}")
               end
             end
           else
@@ -217,8 +217,8 @@ module Aweplug
           end
           id = uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
           ctx_path = ctx_path file_ext
-          cdn_name = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, content)
-          res = URI.parse("#{@cdn_http_base}/#{ctx_path}/#{cdn_name}")
+          cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, content)
+          res = URI.parse("#{@cdn_http_base}/#{cdn_file_path}")
           res.query = uri.query if uri.query
           res.fragment = uri.fragment if uri.fragment
           res
