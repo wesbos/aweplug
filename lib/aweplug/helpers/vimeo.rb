@@ -2,6 +2,7 @@ require 'oauth'
 require 'aweplug/cache/yaml_file_cache'
 require 'aweplug/helpers/identity'
 require 'tilt'
+require 'yaml'
 
 module Aweplug
   module Helpers
@@ -191,6 +192,7 @@ module Aweplug
               end
             end
           else
+
             @video = JSON.parse(@cache.read(@id))['video'][0]
           end
         end
@@ -198,14 +200,15 @@ module Aweplug
         def searchisko_payload
           cast = []
           unless @fetch_failed
+            excludes = contributor_exclude
             if @video['cast']['member'].is_a? Array
               @video['cast']['member'].each do |m|
                 if m['username'] != 'jbossdeveloper'
-                  cast << m['username']
+                  cast << m['username'] unless excludes.include? m['username']
                 end
               end
             elsif @video['cast']['member'] && @video['cast']['member']['username'] != 'jbossdeveloper'
-              cast << @video['cast']['member']['username']
+              cast << @video['cast']['member']['username'] unless excludes.include? @video['cast']['member']['username']
             end
             author = cast.length > 0 ? cast[0] : nil
             searchisko_payload = {
@@ -221,6 +224,15 @@ module Aweplug
               :tags => tags
             }.reject{ |k,v| v.nil? }
           end
+        end
+
+        def contributor_exclude
+          contributor_exclude = Pathname.new(@site.dir).join("_config").join("searchisko_contributor_exclude.yml")
+          if contributor_exclude.exist?
+            yaml = YAML.load_file(contributor_exclude)
+            return yaml['vimeo'] unless yaml['vimeo'].nil?
+          end
+          {}
         end
 
         def duration_in_seconds
