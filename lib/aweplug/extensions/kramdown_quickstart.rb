@@ -85,7 +85,7 @@ module Aweplug
             page = add_to_site site, file
 
             metadata = extract_metadata(file)
-            metadata[:author] = metadata[:author].split(',').first
+            metadata[:author] = metadata[:author].split(',').first if metadata[:author]
             metadata[:commits] = commit_info @repo, Pathname.new(file)
             metadata[:current_tag] = current_tag @repo, Pathname.new(file)
             metadata[:current_branch] = current_branch @repo, Pathname.new(file)
@@ -98,6 +98,13 @@ module Aweplug
             metadata[:searchisko_type] = 'jbossdeveloper_quickstart'
             metadata[:experimental] = @experimental
             converted_html = metadata.delete :converted
+
+            if metadata[:author]
+              metadata[:author].split(',').each_with_index do |author, i|
+                metadata[:author] = author if i == 0
+                metadata[:contributors] << author unless i == 0
+              end
+            end
 
             unless metadata[:images].empty?
               metadata[:images].each do |img|
