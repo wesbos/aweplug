@@ -46,6 +46,8 @@ module Aweplug
         #                              happen when the development profile is in
         #                              use, regardless of the value of this 
         #                              option.
+        #        :experimental       - Boolean to flag quickstarts as 
+        #                              experimental.
         # Returns the created extension.
         def initialize opts = {}
           required_keys = [:repository, :layout, :output_dir]
@@ -59,6 +61,7 @@ module Aweplug
           @excludes = opts[:excludes] || []
           @push_to_searchisko = opts[:push_to_searchisko] || true
           @product = opts[:product]
+          @experimental = opts[:experimental] || false
         end
 
         # Internal: Execute method required by awestruct. Called during the
@@ -71,15 +74,7 @@ module Aweplug
           if site.cache.nil?
             site.send('cache=', Aweplug::Cache::YamlFileCache.new)
           end
-          # Not sure if it's better to do this once per class, 
-          # once per site, or once per invocation
-          searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
-                                                         :authenticate => true, 
-                                                         :searchisko_username => ENV['dcp_user'], 
-                                                         :searchisko_password => ENV['dcp_password'], 
-                                                         :cache => site.cache,
-                                                         :logger => site.log_faraday})
-          Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 20) do |file|
+          Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 10) do |file|
             next if @excludes.include?(File.dirname(file))
 
             # Skip if the site already has this page
@@ -99,6 +94,7 @@ module Aweplug
             metadata[:product] = @product if @product
             metadata[:searchisko_id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
             metadata[:searchisko_type] = 'jbossdeveloper_quickstart'
+            metadata[:experimental] = @experimental
             converted_html = metadata.delete :converted
 
             unless metadata[:images].empty?
@@ -106,40 +102,60 @@ module Aweplug
                 image_path = Pathname.new(@repo).join(img) 
                 add_image_to_site(site, image_path) if File.exist? image_path
               end
-            end
-            
-            searchisko_hash = 
-            {
-              :sys_title => metadata[:title], 
-              :level => metadata[:level],
-              :tags => metadata[:technologies],
-              :sys_description => metadata[:summary],
-              :sys_content => converted_html, 
-              :sys_url_view => "#{site.base_url}#{site.ctx_root.nil? ? '/' : '/' + site.ctx_root + '/'}#{page.output_path}",
-              :contributors => metadata[:contributors_email],
-              :author => metadata[:author],
-              :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
-              :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
-              :target_product => metadata[:target_product],
-              :github_repo_url => metadata[:github_repo_url]
-            } 
-
+            end 
+            page.send 'metadata=', metadata
 
             unless !@push_to_searchisko || site.profile =~ /development/
-              searchisko.push_content(metadata[:searchisko_type], 
-                metadata[:searchisko_id], 
-                searchisko_hash.to_json)
+              send_to_searchisko(metadata, page, site, converted_html)
             end
 
-            page.send 'metadata=', metadata
           end
-          # Add the main readme
-          if File.exist? "#{@repo}/README.md"
-            index = add_to_site site, "#{@repo}/README.md"
-            metadata = extract_metadata("#{@repo}/README.md")
-            index.send 'metadata=', metadata
-          end
-          # Add the contributing
+
+          add_main_readme(site) 
+          add_contributing(site)
+        end
+
+
+        private
+
+        # Private: Sends the metadata to Searchisko.
+        #
+        # Returns nothing.
+        def send_to_searchisko(metadata, page, site, converted_html)
+          searchisko_hash = {
+            :sys_title => metadata[:title], 
+            :level => metadata[:level],
+            :tags => metadata[:technologies],
+            :sys_description => metadata[:summary],
+            :sys_content => converted_html, 
+            :sys_url_view => "#{site.base_url}#{site.ctx_root.nil? ? '/' : '/' + site.ctx_root + '/'}#{page.output_path}",
+            :contributors => metadata[:contributors_email],
+            :author => metadata[:author],
+            :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
+            :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
+            :target_product => metadata[:target_product],
+            :github_repo_url => metadata[:github_repo_url],
+            :experimental => metadata[:experimental]
+          } 
+
+          # Not sure if it's better to do this once per class, 
+          # once per site, or once per invocation
+          searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
+                                                         :authenticate => true, 
+                                                         :searchisko_username => ENV['dcp_user'], 
+                                                         :searchisko_password => ENV['dcp_password'], 
+                                                         :cache => site.cache,
+                                                         :logger => site.log_faraday})
+
+          searchisko.push_content(metadata[:searchisko_type], 
+                                    metadata[:searchisko_id], 
+                                    searchisko_hash.to_json)
+        end
+
+        # Private: Adds the contributing page of the repository to the site.
+        #
+        # Returns nothing.
+        def add_contributing(site)
           if File.exist? "#{@repo}/CONTRIBUTING.md"
             contribute = add_to_site site, "#{@repo}/CONTRIBUTING.md"
             metadata = extract_metadata("#{@repo}/CONTRIBUTING.md")
@@ -151,8 +167,13 @@ module Aweplug
           end
         end
 
-
-        private
+        def add_main_readme(site)
+          if File.exist? "#{@repo}/README.md"
+            index = add_to_site site, "#{@repo}/README.md"
+            metadata = extract_metadata("#{@repo}/README.md")
+            index.send 'metadata=', metadata
+          end
+        end
 
         # Private: Makes use of the sepcial Kramdown parser in aweplug to pull 
         # out metadata from the README files.

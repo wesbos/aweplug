@@ -21,7 +21,7 @@ Gem::Specification.new do |gem|
 
   #gem.add_dependency 'awestruct', '>= 0.5.1'
   gem.add_dependency 'octokit', '>= 1.24.0'
-  gem.add_dependency 'faraday', '>= 0.8.7', '< 0.9.0'
+  gem.add_dependency 'faraday', '>= 0.8.7', '< 1.0.0'
   gem.add_dependency 'faraday_middleware', '>= 0.9.0'
   gem.add_dependency 'curb', '~> 0.8.5'
   gem.add_dependency 'oauth', '~> 0.3.6'
