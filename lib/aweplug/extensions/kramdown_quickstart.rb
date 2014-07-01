@@ -6,6 +6,8 @@ require 'kramdown'
 require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
+require 'json'
+require 'parallel'
 
 module Aweplug
   module Extensions
@@ -77,7 +79,7 @@ module Aweplug
                                                          :searchisko_password => ENV['dcp_password'], 
                                                          :cache => site.cache,
                                                          :logger => site.log_faraday})
-          Dir["#{@repo}/*/README.md"].each do |file|
+          Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 20) do |file|
             next if @excludes.include?(File.dirname(file))
 
             # Skip if the site already has this page

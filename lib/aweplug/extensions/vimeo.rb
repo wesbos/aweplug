@@ -1,6 +1,7 @@
 require 'aweplug/helpers/vimeo'
 require 'aweplug/cache/yaml_file_cache'
 require 'json'
+require 'parallel'
 
 module Aweplug
   module Extensions
@@ -43,7 +44,7 @@ module Aweplug
                                                          :cache => site.cache,
                                                          :logger => site.log_faraday})
 
-          site[@variable].each do |url|
+          Parallel.each(site[@variable], in_threads: 20) do |url|
             id = url.match(/^.*\/(\d*)$/)[1] 
             page_path = Pathname.new(File.join 'video', 'vimeo', "#{id}.html")
 

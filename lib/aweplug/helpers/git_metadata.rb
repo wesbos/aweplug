@@ -1,5 +1,6 @@
 require 'open3'
 require 'json'
+require 'yaml'
 
 module Aweplug
   module Helper
