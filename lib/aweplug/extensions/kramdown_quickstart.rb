@@ -8,6 +8,7 @@ require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
 require 'json'
 require 'parallel'
+require 'pry'
 
 module Aweplug
   module Extensions
@@ -84,6 +85,7 @@ module Aweplug
             page = add_to_site site, file
 
             metadata = extract_metadata(file)
+            metadata[:author] = metadata[:author].split(',').first
             metadata[:commits] = commit_info @repo, Pathname.new(file)
             metadata[:current_tag] = current_tag @repo, Pathname.new(file)
             metadata[:current_branch] = current_branch @repo, Pathname.new(file)
