@@ -99,7 +99,8 @@ module Aweplug
           page = site.engine.load_site_page path
           page.layout = @layout
           # TODO: Set the imagedir attribute for the page
-          page.output_path = File.join(@output_dir, File.basename(page.output_path, File.extname(page.output_path)), 'index.html')
+          page.output_dir =  File.join(@output_dir, File.basename(page.output_path, File.extname(page.output_path))).downcase
+          page.output_path = File.join(page.output_dir, 'index.html')
 
           doc = Asciidoctor.load_file path
           metadata = {:author => doc.author, 
@@ -122,7 +123,7 @@ module Aweplug
             :sys_title => metadata[:title], 
             :sys_description => metadata[:summary],
             :sys_content => doc.render, 
-            :sys_url_view => "#{site.base_url}#{site.ctx_root.nil? ? '/' : '/' + site.ctx_root + '/'}#{page.output_path}",
+            :sys_url_view => "#{site.base_url}#{site.ctx_root.nil? ? '/' : '/' + site.ctx_root + '/'}#{page.output_dir}",
             :contributors => metadata[:commits].collect { |c| c[:author_email] }.unshift(metadata[:author]).uniq,
             :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
             :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
