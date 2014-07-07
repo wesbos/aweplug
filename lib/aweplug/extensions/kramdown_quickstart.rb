@@ -1,6 +1,7 @@
 require 'pathname'
 require 'set'
 require 'json'
+require 'date'
 
 require 'kramdown'
 require 'aweplug/helpers/git_metadata'
@@ -72,6 +73,8 @@ module Aweplug
         #
         # Returns nothing.
         def execute site
+          start_time = DateTime.now
+
           if site.cache.nil?
             site.send('cache=', Aweplug::Cache::YamlFileCache.new)
           end
@@ -122,6 +125,7 @@ module Aweplug
 
           add_main_readme(site) 
           add_contributing(site)
+          puts "Total time in kramdown_quickstart repo #{@repo}: #{Time.at(DateTime.now.to_time - start_time.to_time).strftime("%M:%S")}"
         end
 
 

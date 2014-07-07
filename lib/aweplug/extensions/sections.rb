@@ -1,3 +1,4 @@
+require 'date'
 require 'asciidoctor'
 require 'awestruct/handlers/interpolation_handler'
 
@@ -14,7 +15,8 @@ module Aweplug
       # adding them to the page variable.
       #
       # site - The awestruct site variable
-      def execute site
+      def execute site 
+        start_time = DateTime.now
         site.pages.each do |page|
           if page.content_syntax =~ /^a(sc)?(ii)?(d(oc)?)?$/
             sections = Asciidoctor.load(interpolated_content(page), {sectanchors: ''}).sections
@@ -25,6 +27,7 @@ module Aweplug
             end
           end
         end
+        puts "Total time in sections: #{Time.at(DateTime.now.to_time - start_time.to_time).strftime("%M:%S")}"
       end
 
       private

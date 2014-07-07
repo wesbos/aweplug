@@ -1,3 +1,4 @@
+require 'date'
 require 'aweplug/helpers/vimeo'
 require 'aweplug/cache/yaml_file_cache'
 require 'json'
@@ -33,6 +34,7 @@ module Aweplug
         end
 
         def execute site 
+          start_time = DateTime.now
           @site = site
           if site.cache.nil?
             site.send('cache=', Aweplug::Cache::YamlFileCache.new)
@@ -71,6 +73,7 @@ module Aweplug
               end 
             end
           end
+          puts "Total time in vimeo: #{Time.at(DateTime.now.to_time - start_time.to_time).strftime("%M:%S")}"
         end
       end
     end
