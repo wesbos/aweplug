@@ -73,7 +73,7 @@ module Aweplug
               end 
             end
           end
-          puts "Total time in vimeo: #{Time.at(DateTime.now.to_time - start_time.to_time).strftime("%M:%S")}"
+          puts "Total time in vimeo: #{DateTime.now.to_time - start_time.to_time} seconds"
         end
       end
     end

@@ -27,7 +27,7 @@ module Aweplug
             end
           end
         end
-        puts "Total time in sections: #{Time.at(DateTime.now.to_time - start_time.to_time).strftime("%M:%S")}"
+        puts "Total time in sections: #{DateTime.now.to_time - start_time.to_time} seconds"
       end
 
       private
