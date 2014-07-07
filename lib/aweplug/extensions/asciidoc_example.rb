@@ -143,7 +143,7 @@ module Aweplug
           end
           page.send('metadata=', metadata)
         end
-        puts "Total time in asciidoc_example repo #{@repo}: #{DateTime.now.to_time - start_time.to_time)} seconds"
+        puts "Total time in asciidoc_example repo #{@repo}: #{DateTime.now.to_time - start_time.to_time} seconds"
       end
     end
   end

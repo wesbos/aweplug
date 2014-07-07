@@ -125,7 +125,7 @@ module Aweplug
 
           add_main_readme(site) 
           add_contributing(site)
-          puts "Total time in kramdown_quickstart repo #{@repo}: #{Time.at(DateTime.now.to_time - start_time.to_time).strftime("%M:%S")}"
+          puts "Total time in kramdown_quickstart repo #{@repo}: #{DateTime.now.to_time - start_time.to_time} seconds"
         end
 
 
