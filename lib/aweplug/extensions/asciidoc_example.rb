@@ -4,7 +4,6 @@ require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/searchisko'
 require 'aweplug/helpers/cdn'
 require 'json'
-require 'date'
 
 module Aweplug
   module Extensions
@@ -79,7 +78,6 @@ module Aweplug
       #
       # Returns nothing.
       def execute site
-        start_time = DateTime.now
         if site.cache.nil?
           site.send('cache=', Aweplug::Cache::YamlFileCache.new)
         end
@@ -143,7 +141,6 @@ module Aweplug
           end
           page.send('metadata=', metadata)
         end
-        puts "Total time in asciidoc_example repo #{@repo}: #{DateTime.now.to_time - start_time.to_time} seconds"
       end
     end
   end
