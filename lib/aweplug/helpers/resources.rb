@@ -207,14 +207,11 @@ module Aweplug
               else
                 raise "Unable to read file from #{abs}"
               end
-              if @minify
-                content = compress(raw_content, file_ext)
-              else
-                content = raw_content
-              end
             end
             if @minify
               content = compress(content, file_ext)
+            else
+              content = raw_content
             end
             id = uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
             ctx_path = ctx_path file_ext
