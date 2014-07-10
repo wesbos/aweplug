@@ -1,5 +1,6 @@
 require 'digest'
 require 'yaml'
+require 'aweplug/helpers/png'
 
 module Aweplug
   module Helpers
@@ -34,27 +35,39 @@ module Aweplug
         end
       end
 
-      def add(name, ext, content) 
+      def add(name, ext, content, minify = false) 
         if @version
-          version(name, ext, content)
+          version(name, ext, content, minify)
         else
           File.open(@tmp_dir.join(name + ext), 'w') { |file| file.write(content) }
           name(name, ext)
         end
       end
 
-      def version(name, ext, content)
+      def version(name, ext, content, minify)
         id = name + ext
         yml = YAML::Store.new @control
         yml.transaction do
           yml[id] ||= { "build_no" => 0 }
-          md5sum = Digest::MD5.hexdigest(content)
-          if yml[id]["md5sum"] != md5sum
-            yml[id]["md5sum"] = md5sum
+          raw_md5sum = Digest::MD5.hexdigest(content)
+          if yml[id]["raw_md5sum"] != raw_md5sum
+            yml[id]["raw_md5sum"] = raw_md5sum
             build_no = yml[id]["build_no"] += 1
+            if minify
+              content = compress(content, ext)
+              yml[id]["md5sum"] = Digest::MD5.hexdigest(content)
+            end
             File.open(@tmp_dir.join(name + "-" + build_no.to_s + ext), 'w') { |file| file.write(content) }
           end
           name(name, ext, yml[id]["build_no"].to_s)
+        end
+      end
+
+      def compress(content, file_ext)
+        if file_ext == ".png"
+          PNG.new(content).compress.output
+        else
+          content
         end
       end
 
