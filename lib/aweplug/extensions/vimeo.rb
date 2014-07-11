@@ -44,7 +44,7 @@ module Aweplug
                                                          :cache => site.cache,
                                                          :logger => site.log_faraday})
 
-          Parallel.each(site[@variable], in_threads: 20) do |url|
+          Parallel.each(site[@variable], in_threads: 40) do |url|
             id = url.match(/^.*\/(\d*)$/)[1] 
             page_path = Pathname.new(File.join 'video', 'vimeo', "#{id}.html")
 
