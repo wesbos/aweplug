@@ -1,6 +1,5 @@
 require 'nokogiri'
 require 'aweplug/helpers/cdn'
-require 'aweplug/helpers/png'
 require 'net/http'
 require 'sass'
 require 'tempfile'
@@ -196,7 +195,7 @@ module Aweplug
             uri = URI.parse(src_path)
             file_ext = File.extname(uri.path)
             if uri.scheme
-              content = Net::HTTP.get(uri)
+              raw_content = Net::HTTP.get(uri)
             else
               # Some file paths may have query strings or fragments...
               base = Pathname.new(@base)
@@ -208,28 +207,15 @@ module Aweplug
                 raise "Unable to read file from #{abs}"
               end
             end
-            if @minify
-              content = compress(content, file_ext)
-            else
-              content = raw_content
-            end
             id = uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
             ctx_path = ctx_path file_ext
-            cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, content)
+            cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, raw_content)
             res = URI.parse("#{@cdn_http_base}/#{cdn_file_path}")
             res.query = uri.query if uri.query
             res.fragment = uri.fragment if uri.fragment
             res
           else
             src_path
-          end
-        end
-
-        def compress(content, file_ext)
-          if file_ext == ".png"
-            Aweplug::Helpers::PNG.new(content).compress.output
-          else
-            content
           end
         end
 

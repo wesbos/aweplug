@@ -75,7 +75,7 @@ module Aweplug
           if site.cache.nil?
             site.send('cache=', Aweplug::Cache::YamlFileCache.new)
           end
-          Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 10) do |file|
+          Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 40) do |file|
             next if @excludes.include?(File.dirname(file))
 
             # Skip if the site already has this page
