@@ -23,10 +23,19 @@ module Aweplug
           #
           # repo_root - The directory (relative to the site base) containing the git repo
           # file_path - Path to the file being processed, relative to the site base
+          # opts      - Any options to pass to the git command
           #
           # Returns an array of commit info as json values
-          def commit_info(repo_root, file_path)
-            o, _ = Open3.capture2(%Q[git --git-dir=#{repo_root}/.git log --date=iso --format='{"author":"%an","author_email":"%ae","date":"%ai","hash":"%h","subject":"%f"}' -- #{file_path.to_s.sub(/#{repo_root}\//, '')}])
+          def commit_info(repo_root, file_path, opts = {})
+            # TODO: Sanitize this
+            default_opts = {date: 'iso', format: %Q|{"author":"%an","author_email":"%ae","date":"%ai","hash":"%h","subject":"%f"}| }
+            opts.merge! default_opts
+
+            cmd = %Q[git --git-dir=#{repo_root}/.git log]
+            opts.each {|key,value| cmd << " --#{key}='#{value}'"}
+            cmd << " -- #{file_path.to_s.sub(/#{repo_root}\//, '')}"
+
+            o, _ = Open3.capture2(cmd)
             o.split("\n").map{ |l| JSON.parse l, :symbolize_names => true }
           end
 
