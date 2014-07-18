@@ -30,7 +30,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'sass', '~> 3.2'
   gem.add_dependency 'nokogiri', '~> 1.5.10'
   #gem.add_dependency 'rugged', '~> 0.19'
-  gem.add_dependency 'parallel', '~> 1.0.0'
+  gem.add_dependency 'parallel', '~> 1.0'
 
   gem.add_development_dependency 'guard-rspec', '~> 3.0.0'
   gem.add_development_dependency 'rake', '~> 10.0.4'

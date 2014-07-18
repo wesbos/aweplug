@@ -118,6 +118,10 @@ module Aweplug
               send_to_searchisko(metadata, page, site, converted_html)
             end
 
+            if site.dev_mat_techs.nil?
+              site.send('dev_mat_techs=', []);
+            end
+            site.dev_mat_techs << metadata[:technologies].flatten
           end
 
           add_main_readme(site) 
@@ -201,7 +205,7 @@ module Aweplug
           metadata = document.root.options[:metadata]
           metadata[:toc] = toc_items
           metadata[:converted] = document.to_html
-          metadata[:technologies] = metadata[:technologies].split(",")
+          metadata[:technologies] = metadata[:technologies].split(",").collect {|tech| tech.strip}
           metadata[:images] = find_images(document.root)
           metadata
         end
