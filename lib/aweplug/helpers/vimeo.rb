@@ -53,7 +53,7 @@ module Aweplug
           else
             path = Pathname.new(File.dirname(__FILE__)).join(default_snippet)
           end
-          Tilt.new(path.to_s).render(Object.new, :video => video)
+          Tilt.new(path.to_s).render(Object.new, :video => video, :page => page, :site => site)
         end
       end
 
@@ -238,6 +238,19 @@ module Aweplug
         def duration_in_seconds
           a = @video["duration"].split(":").reverse
           (a.length > 0 ? a[0].to_i : 0) + (a.length > 1 ? a[1].to_i * 60 : 0) + (a.length > 2 ? a[2].to_i * 60 : 0)
+        end
+
+        def duration_iso8601
+          t = Integer @video["duration"]
+          Time.at(t).utc.strftime("PT%HH%MM%SS")
+        end
+
+        def height
+          @video["height"]
+        end
+
+        def width
+          @video["width"]
         end
 
         def load_thumb_url

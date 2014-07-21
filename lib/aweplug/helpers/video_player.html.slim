@@ -1,8 +1,12 @@
 div(itemprop="video" itemscope itemtype="http://schema.org/VideoObject" data-searchisko-type="jbossdeveloper_vimeo" data-searchisko-id="#{video.id}")
+  link itemprop="url" href="#{page.url}"
+  meta itemprop="description" content="#{video.description}"
+  meta itemprop="height" content="#{video.height}"
+  meta itemprop="width" content="#{video.width}"
   h4 itemprop="name" #{video.title}
   / TODO Add more metadata
-  span itemprop="duration" content="#{video.duration_in_seconds}"
-  span itemprop="thumbnail" content="#{video.thumb_url}"
+  span itemprop="duration" content="#{video.duration_iso8601}"
+  span itemprop="thumbnailurl" content="#{video.thumb_url}"
   span itemprop="uploadDate" content="#{video.upload_date_iso8601}"
   .flex-video(widescreen vimeo)
     iframe(src="//player.vimeo.com/video/#{video.id}?title=0&byline=0&portrait=0&badge=0&color=2664A2" width="500" height="313" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen)
