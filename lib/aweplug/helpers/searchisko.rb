@@ -59,6 +59,7 @@ module Aweplug
             end
           end
           builder.request :url_encoded
+          builder.request :retry
           builder.response :raise_error if opts[:raise_error]
           builder.use FaradayMiddleware::Caching, opts[:cache], {}
           #builder.response :json, :content_type => /\bjson$/
