@@ -85,18 +85,6 @@ module Aweplug
             page = add_to_site site, file
 
             metadata = extract_metadata(file)
-            metadata[:author] = metadata[:author].split(',').first if metadata[:author]
-            metadata[:commits] = commit_info @repo, Pathname.new(file)
-            metadata[:current_tag] = current_tag @repo, Pathname.new(file)
-            metadata[:current_branch] = current_branch @repo, Pathname.new(file)
-            metadata[:github_repo_url] = repository_url @repo
-            metadata[:contributors] = metadata[:commits].collect { |c| c[:author] }.uniq
-            metadata[:contributors_email] = metadata[:commits].collect { |c| c[:author_email] }.uniq
-            metadata[:contributors].delete(metadata[:author])
-            metadata[:product] = @product if @product
-            metadata[:searchisko_id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
-            metadata[:searchisko_type] = 'jbossdeveloper_quickstart'
-            metadata[:experimental] = @experimental
             converted_html = metadata.delete :converted
 
             if metadata[:author]
@@ -135,6 +123,9 @@ module Aweplug
         #
         # Returns nothing.
         def send_to_searchisko(metadata, page, site, converted_html)
+          metadata[:searchisko_id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
+          metadata[:searchisko_type] = 'jbossdeveloper_quickstart'
+
           searchisko_hash = {
             :sys_title => metadata[:title], 
             :level => metadata[:level],
@@ -201,12 +192,21 @@ module Aweplug
             {:id => t.attr[:id], :text => t.value.children.first.value}
           end
 
-
           metadata = document.root.options[:metadata]
           metadata[:toc] = toc_items
           metadata[:converted] = document.to_html
           metadata[:technologies] = metadata[:technologies].split(",").collect {|tech| tech.strip}
           metadata[:images] = find_images(document.root)
+          metadata[:author] = metadata[:author].split(',').first if metadata[:author]
+          metadata[:commits] = commit_info @repo, Pathname.new(file)
+          metadata[:current_tag] = current_tag @repo, Pathname.new(file)
+          metadata[:current_branch] = current_branch @repo, Pathname.new(file)
+          metadata[:github_repo_url] = repository_url @repo
+          metadata[:contributors] = metadata[:commits].collect { |c| c[:author] }.uniq
+          metadata[:contributors_email] = metadata[:commits].collect { |c| c[:author_email] }.uniq
+          metadata[:contributors].delete(metadata[:author])
+          metadata[:product] = @product if @product
+          metadata[:experimental] = @experimental
           metadata
         end
 
