@@ -158,7 +158,8 @@ module Aweplug
                                                          :searchisko_username => ENV['dcp_user'], 
                                                          :searchisko_password => ENV['dcp_password'], 
                                                          :cache => site.cache,
-                                                         :logger => site.log_faraday})
+                                                         :logger => site.log_faraday,
+                                                         :searchisko_warnings => site.searchisko_warnings})
 
           searchisko.push_content(metadata[:searchisko_type], 
                                     metadata[:searchisko_id], 

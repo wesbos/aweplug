@@ -2,6 +2,7 @@ require 'faraday'
 require 'faraday_middleware' 
 require 'aweplug/cache/yaml_file_cache'
 require 'logger'
+require 'json'
 
 # WARNING: monkey patching faraday
 # TODO: See if we can the new refinements to work
@@ -65,6 +66,7 @@ module Aweplug
           #builder.response :json, :content_type => /\bjson$/
           builder.adapter opts[:adapter] || :net_http
         end
+        @searchisko_warnings = opts[:searchisko_warnings] if opts.has_key? :searchisko_warnings
       end
 
       # Public: Performs a GET search against the Searchisko instance using 
@@ -148,7 +150,21 @@ module Aweplug
             $LOG.warn "Error making searchisko request to '#{path}'. Status: #{resp.status}. 
                        Params: #{params}. Response body: #{resp.body}"
           elsif body.has_key? "warnings"
-            $LOG.warn "Searchisko content POST to '#{path}' succeeded with warnings: #{body["warnings"]}"
+            unless @searchisko_warnings.nil?
+              File.open(@searchisko_warnings, File::RDWR|File::CREAT, 0644) do |file|
+                file.flock(File::LOCK_EX)
+                if file.size > 0
+                  content = JSON.load(file)
+                else
+                  content = []
+                end
+                content << {:path => path, :body => body, :headers => resp.headers, :status => resp.status}
+                file.rewind
+                file.write(content.to_json)
+              end
+            else
+              $LOG.warn "Searchisko content POST to '#{path}' succeeded with warnings: #{body["warnings"]}"
+            end
           end
         end
       end

@@ -215,7 +215,8 @@ module Aweplug
           searchisko = Aweplug::Helpers::Searchisko.new({:base_url => @site.dcp_base_url,
                                                         :authenticate => false,
                                                         :cache => @site.cache,
-                                                        :logger => @site.profile == 'developement'})
+                                                        :logger => @site.profile == 'development',
+                                                        :searchisko_warnings => @site.searchisko_warnings})
           query = prototype.to_query
           hits = JSON.load((searchisko.get("search?sys_type=contributor_profile&field=_source&#{query}")).body)['hits']
           if hits['hits'].length == 1

@@ -42,7 +42,8 @@ module Aweplug
                                                          :searchisko_username => ENV['dcp_user'], 
                                                          :searchisko_password => ENV['dcp_password'], 
                                                          :cache => site.cache,
-                                                         :logger => site.log_faraday})
+                                                         :logger => site.log_faraday,
+                                                         :searchisko_warnings => site.searchisko_warnings})
 
           Parallel.each(site[@variable], in_threads: 40) do |url|
             id = url.match(/^.*\/(\d*)$/)[1] 
