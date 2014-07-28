@@ -86,7 +86,8 @@ module Aweplug
                                                        :searchisko_username => ENV['dcp_user'], 
                                                        :searchisko_password => ENV['dcp_password'], 
                                                        :cache => site.cache,
-                                                       :logger => site.log_faraday})
+                                                       :logger => site.log_faraday,
+                                                       :searchisko_warnings => site.searchisko_warnings})
         Find.find @directory do |path|
           Find.prune if File.directory?(path) && !@recurse_subdirectories
 
