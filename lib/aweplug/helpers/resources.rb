@@ -31,16 +31,16 @@ module Aweplug
         end
 
         def read
-          if @minfy
+          if @minify
             out = compress(@raw)
             raw_len = @raw.length
             out_len = out.length
 
             if raw_len > out_len
-              $LOG.debug " %d bytes -> %d bytes = %.1f%%" % [ raw_len, out_len, 100 * out_len/raw_len ] if $LOG.debug?
+              puts " %d bytes -> %d bytes = %.1f%%" % [ raw_len, out_len, 100 * out_len/raw_len ] if $LOG.debug?
               out
             else
-              $LOG.debug " no gain" if $LOG.debug?
+              puts " no gain" if $LOG.debug?
               @raw
             end
           else
@@ -54,10 +54,10 @@ module Aweplug
 
         def compress(raw)
           # Note that CSS compression is not supported at this level. Sass :compressed should be used        
-          if Aweplug::Resourecs::JS_EXT.include?(@ext)
+          if Aweplug::Helpers::Resources::JS_EXT.include?(@ext)
             Aweplug::Helpers::Resources::JSCompressor.new.compress(raw)
-          elsif @minify && Aweplug::Resourecs::PNG_EXT.include(ext)
-            Aweplug::Helpers::PNG.new(content).compress
+          elsif Aweplug::Helpers::Resources::PNG_EXT.include?(@ext)
+            Aweplug::Helpers::PNG.new(raw).compress.output
           else
             raw
           end
@@ -92,11 +92,8 @@ module Aweplug
                 end
               end
               if !content.empty?
-                if @site.minify
-                  content = compress(content)
-                end
                 file_ext = ext
-                cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @site.cdn_out_dir, @site.cdn_version).add(id, file_ext, Content.new(content, minify, file_ext))
+                cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @site.cdn_out_dir, @site.cdn_version).add(id, file_ext, Content.new(content, @site.minify, file_ext))
                 @@cache[src] << tag("#{@site.cdn_http_base}/#{cdn_file_path}")
               end
             end
@@ -224,7 +221,7 @@ module Aweplug
             end
             id = uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
             ctx_path = ctx_path file_ext
-            cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, Content.new(raw_content, minify, file_ext))
+            cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, Content.new(raw_content, @minify, file_ext))
             res = URI.parse("#{@cdn_http_base}/#{cdn_file_path}")
             res.query = uri.query if uri.query
             res.fragment = uri.fragment if uri.fragment
@@ -239,11 +236,11 @@ module Aweplug
         end
 
         def ctx_path(ext)
-          if Aweplug::Resources::FONT_EXT.include? ext
+          if Aweplug::Helpers::Resources::FONT_EXT.include? ext
             "fonts"
-          elsif Aweplug::Resources::IMG_EXT.include? ext
+          elsif Aweplug::Helpers::Resources::IMG_EXT.include? ext
             "images"
-          elsif Aweplug::Resources::JS_EXT.include? ext
+          elsif Aweplug::Helpers::Resources::JS_EXT.include? ext
             "javascripts"
           else
             "other"
@@ -258,8 +255,21 @@ module Aweplug
       # This currently only supports resoures loaded from #{site.base_url}
       #
       # Note that this helper is NOT tested outside of Slim
-      def javascripts(id, &block)
-        Javascript.new(site).resources(id, yield)
+      def javascripts(id, deferred = false, &block)
+        out = Javascript.new(site).resources(id, yield)
+        if deferred
+          @deferred_javascripts ||= {}
+          @deferred_javascripts[id] = out
+          page.extra_javascripts ||= []
+          page.extra_javascripts << id
+          ""
+        else
+          out
+        end
+      end
+
+      def deferred_javascripts(id)
+        @deferred_javascripts[id]
       end
 
       # Public: Slim helper that captures the content of a block
