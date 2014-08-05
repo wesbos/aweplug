@@ -181,6 +181,7 @@ module Aweplug
 
         IMG_EXT = ['.png', '.jpeg', '.jpg', '.gif']
         FONT_EXT = ['.otf', '.eot', '.svg', '.ttf', '.woff']
+        JS_EXT = ['.js']
 
         def initialize(base_path, cdn_http_base, cdn_out_dir, minify, version)
           @base = base_path
@@ -209,7 +210,7 @@ module Aweplug
             end
             id = uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
             ctx_path = ctx_path file_ext
-            cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, raw_content)
+            cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, compress(raw_content, file_ext))
             res = URI.parse("#{@cdn_http_base}/#{cdn_file_path}")
             res.query = uri.query if uri.query
             res.fragment = uri.fragment if uri.fragment
@@ -228,8 +229,28 @@ module Aweplug
             "fonts"
           elsif IMG_EXT.include? ext
             "images"
+          elsif JS_EXT.include? ext
+            "javascripts"
           else
             "other"
+          end
+        end
+
+        def compress(input, ext)
+          if @minify && JS_EXT.include?(ext)
+            JSCompressor.new.compress(input)
+          else
+            input
+          end
+        end
+
+        private
+
+        class JSCompressor
+          def compress( input )
+            # Require this late to prevent people doing devel needing to set up a JS runtime
+            require 'uglifier'
+            Uglifier.new(:mangle => false).compile(input)
           end
         end
       end
