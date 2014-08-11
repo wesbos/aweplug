@@ -135,11 +135,11 @@ module Aweplug
             hash
           end
 
-          unless !@push_to_searchisko || site.profile =~ /development/
-            searchisko.push_content(metadata[:searchisko_type],
-                                    metadata[:searchisko_id],
-                                    searchisko_hash.to_json)
-          end
+          # unless !@push_to_searchisko || site.profile =~ /development/
+          #   searchisko.push_content(metadata[:searchisko_type],
+          #                           metadata[:searchisko_id],
+          #                           searchisko_hash.to_json)
+          # end
           page.send('metadata=', metadata)
         end
       end
