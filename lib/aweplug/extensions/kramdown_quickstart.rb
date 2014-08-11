@@ -105,7 +105,7 @@ module Aweplug
             # unless !@push_to_searchisko || site.profile =~ /development/
               # send_to_searchisko(metadata, page, site, converted_html)
             # end
-            puts "::DEBUG:: #{site.profile} ::DEBUG::"
+            puts "::DEBUG:: #{@push_to_searchisko} ::DEBUG::"
 
             if site.dev_mat_techs.nil?
               site.send('dev_mat_techs=', []);
