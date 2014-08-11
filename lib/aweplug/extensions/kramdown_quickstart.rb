@@ -102,10 +102,10 @@ module Aweplug
             end 
             page.send 'metadata=', metadata
 
-            unless site.profile =~ /development/ || !@push_to_searchisko
-              puts "::DEBUG:: #{@push_to_searchisko} ::DEBUG::"
-              send_to_searchisko(metadata, page, site, converted_html)
-            end
+            # unless site.profile =~ /development/ || !@push_to_searchisko
+            #   puts "::DEBUG:: #{@push_to_searchisko} ::DEBUG::"
+            #   send_to_searchisko(metadata, page, site, converted_html)
+            # end
 
             if site.dev_mat_techs.nil?
               site.send('dev_mat_techs=', []);
