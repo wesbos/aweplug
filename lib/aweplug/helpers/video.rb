@@ -50,14 +50,11 @@ module Aweplug
       end
 
       def author
-        cast[0] ? cast[0] : OpenStruct.new({"display_name" => "Unknown"})
+        raise NotImplementedError
       end
 
       def cast
-        unless @cast
-          load_cast
-        end
-        @cast
+        raise NotImplementedError
       end
 
       def tags
