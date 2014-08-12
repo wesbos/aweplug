@@ -150,6 +150,33 @@ module Aweplug
           Time.at(t).utc.strftime("PT%HH%MM%SS")
         end
 
+        def detail_url
+          "#{@site.base_url}/video/vimeo/#{id}"
+        end
+
+        def author
+          cast[0] ? cast[0] : OpenStruct.new({"display_name" => "Unknown"})
+        end
+
+        def cast
+          unless @cast
+            load_cast
+          end
+          @cast
+        end
+
+        def load_cast
+          @cast = []
+          if @site.identity_manager && @video['cast']
+            cast = @video['cast']
+            if cast['member'].is_a?(Hash) && cast['member']['username'] != 'jbossdeveloper'
+              prototype = Aweplug::Identity::Contributor.new({"accounts" => {"vimeo.com" => {"username" => cast['member']['username']}}})
+              contrib = @site.identity_manager.get(prototype)
+              @cast << contrib
+            end
+          end
+        end
+
         def searchisko_payload
           cast = []
           unless @fetch_failed
