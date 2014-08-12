@@ -121,6 +121,15 @@ module Aweplug
                       :searchisko_type => 'jbossdeveloper_example',
                       :searchisko_id => Digest::SHA1.hexdigest(doc.doctitle)[0..7]
                     }
+          metadata[:published] = DateTime.parse(metadata[:commits].first[:date]) unless metadata[:commits].empty?
+          unless metadata[:current_branch] == 'HEAD'
+            git_ref = metadata[:current_branch]
+          else
+            git_ref = metadata[:current_tag] || 'HEAD'
+          end
+          metadata[:download] = "#{metadata[:github_repo_url]}/archive/#{git_ref}.zip"
+          metadata[:browse] = "#{metadata[:github_repo_url]}/tree/#{git_ref}"
+          metadata[:scm] = 'github'
 
           metadata[:contributors] = metadata[:commits].collect { |c| c[:author_email] }.uniq
 

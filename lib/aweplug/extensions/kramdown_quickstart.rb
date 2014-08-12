@@ -217,6 +217,15 @@ module Aweplug
           metadata[:contributors].delete(metadata[:author])
           metadata[:product] = @product if @product
           metadata[:experimental] = @experimental
+          metadata[:published] = DateTime.parse(metadata[:commits].first[:date]) unless metadata[:commits].empty?
+          unless metadata[:current_branch] == 'HEAD'
+            git_ref = metadata[:current_branch]
+          else
+            git_ref = metadata[:current_tag] || 'HEAD'
+          end
+          metadata[:download] = "#{metadata[:github_repo_url]}/archive/#{git_ref}.zip"
+          metadata[:browse] = "#{metadata[:github_repo_url]}/tree/#{git_ref}"
+          metadata[:scm] = 'github'
           metadata
         end
 

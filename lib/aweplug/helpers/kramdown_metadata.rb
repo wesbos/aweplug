@@ -24,8 +24,13 @@ module Kramdown
         @block_parsers.unshift :product_metadata
         @block_parsers.unshift :title_hack_metadata
         @block_parsers.unshift :pre_reqs
+        @block_parsers.unshift :github_repo_url
+        @block_parsers.unshift :experimental
+        @block_parsers.unshift :thumbnail
+        @block_parsers.unshift :download_url
+        @block_parsers.unshift :contributors
 
-        @root.options[:metadata] = {:author => '', :level => '',
+        @root.options[:metadata] = { :level => '',
                                     :technologies => '', :target_product => '',
                                     :source => '', :summary => ''}
       end
@@ -106,6 +111,44 @@ module Kramdown
         @root.options[:metadata][:prereq] = @src[2].rstrip
       end
       define_parser(:pre_reqs, /^(Prerequisites:)#{OPT_SPACE}(.*?)\s*?\n/)
+
+      # Internal: Parses the github repo url to add to the metadata Hash.
+      def parse_github_repo_url
+        @src.pos += @src.matched_size
+        @root.options[:metadata][:github_repo_url] = @src[2].rstrip
+      end
+      define_parser(:github_repo_url, /^(GitHub:)#{OPT_SPACE}(.*?)\s*?\n/)
+
+      # Internal: Parses the expiremental flag to add to the metadata Hash.
+      def parse_experimental
+        @src.pos += @src.matched_size
+        v = @src[2].rstrip
+        @root.options[:metadata][:experimental] = 'true'.casecmp(v) || 'yes'.casecmp(v)
+      end
+      define_parser(:experimental, /^(Experimental:)#{OPT_SPACE}(.*?)\s*?\n/)
+
+      # Internal: Parses the thumbnail url to add to the metadata Hash.
+      def parse_thumbnail
+        @src.pos += @src.matched_size
+        @root.options[:metadata][:thumbnail] = @src[2].rstrip
+      end
+      define_parser(:thumbnail, /^(Thumbnail:)#{OPT_SPACE}(.*?)\s*?\n/)
+
+      # Internal: Parses the download url to add to the metadata Hash.
+      def parse_download_url
+        @src.pos += @src.matched_size
+        @root.options[:metadata][:download] = @src[2].rstrip
+      end
+      define_parser(:download_url, /^(Download:)#{OPT_SPACE}(.*?)\s*?\n/)
+
+      # Internal: Parses the pre-reqs to add to the metadata Hash.
+      def parse_contributors
+        @src.pos += @src.matched_size
+        @root.options[:metadata][:contributors] = @src[2].rstrip
+      end
+      define_parser(:contributors, /^(Contributors:)#{OPT_SPACE}(.*?)\s*?\n/)
+
     end
   end
 end
+
