@@ -51,7 +51,7 @@ module Aweplug
               page_path = Pathname.new(File.join 'video', 'vimeo', "#{video.id}.html")
 
               # Skip if the site already has this page
-              next if site.pages.find {|p| p.source_path == page_path} 
+              next if site.pages.any? {|p| p.source_path.include? page_path.to_s}
 
               add_video_to_site video, site
 
@@ -63,7 +63,7 @@ module Aweplug
             id = videoUrl.split('http://vimeo.com/').last
             page_path = Pathname.new(File.join 'video', 'vimeo', "#{id}.html")
             # Skip if the site already has this page
-            next if site.pages.find {|p| p.source_path == page_path} 
+            next if site.pages.any? {|p| p.source_path.include? page_path.to_s}
 
             videoJson = JSON.load(exec_method "vimeo.videos.getInfo", {format: 'json', video_id: id})['video'].first
             video = Aweplug::Helpers::Vimeo::VimeoVideo.new videoJson, site
