@@ -3,7 +3,7 @@
 - page.video_width = 313
 - page.video_duration_in_seconds = video.duration_in_seconds
 - page.published_date = video.upload_date_iso8601
-- page.image = video.thumb_url
+- page.image ||= video.thumb_url
 div(itemprop="video" itemscope itemtype="http://schema.org/VideoObject" data-searchisko-type="jbossdeveloper_vimeo" data-searchisko-id="#{video.id}")
   link itemprop="url" href="#{site.base_url}#{page.url}"
   meta itemprop="description" content="#{video.description}"
