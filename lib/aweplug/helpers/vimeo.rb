@@ -1,7 +1,7 @@
 require 'oauth'
 require 'aweplug/cache/yaml_file_cache'
-require 'aweplug/helpers/identity'
 require 'aweplug/helpers/video'
+require 'aweplug/helpers/searchisko_social'
 require 'tilt'
 require 'yaml'
 
@@ -51,12 +51,19 @@ module Aweplug
       protected 
 
       def render(video, default_snippet, snippet)
-        if snippet
-          path = Pathname.new(site.dir).join("_partials").join(snippet)
-        else
-          path = Pathname.new(File.dirname(__FILE__)).join(default_snippet)
+        if !video.fetch_failed
+          if snippet
+            path = snippet
+          else
+            path = default_snippet
+          end
+          if !File.exists?("#{site.dir}/_partials/#{path}")
+            path = Pathname.new(File.dirname(__FILE__)).join(default_snippet)
+            Tilt.new(path.to_s).render(Object.new, :video => video, :page => page, :site => site)
+          else
+            partial path, {:video => video, :parent => page}
+          end
         end
-        Tilt.new(path.to_s).render(Object.new, :video => video, :page => page, :site => site)
       end
 
       # Internal: Extracts a firstname from a full name
@@ -124,6 +131,7 @@ module Aweplug
       # Internal: Data object to hold and parse values from the Vimeo API.
       class VimeoVideo < ::Aweplug::Helpers::Video
         include Aweplug::Helpers::Vimeo
+        include Aweplug::Helpers::SearchiskoSocial
 
         attr_reader :fetch_failed
 
@@ -155,7 +163,7 @@ module Aweplug
         end
 
         def author
-          cast[0] ? cast[0] : OpenStruct.new({"display_name" => "Unknown"})
+          cast[0]
         end
 
         def cast
@@ -167,14 +175,27 @@ module Aweplug
 
         def load_cast
           @cast = []
-          if @site.identity_manager && @video['cast']
-            cast = @video['cast']
-            if cast['member'].is_a?(Hash) && cast['member']['username'] != 'jbossdeveloper'
-              prototype = Aweplug::Identity::Contributor.new({"accounts" => {"vimeo.com" => {"username" => cast['member']['username']}}})
-              contrib = @site.identity_manager.get(prototype)
-              @cast << contrib
+          unless @video['cast'].nil? || @video['cast']['member'].nil?
+            members = [@video['cast']['member']].flatten
+            searchisko = Aweplug::Helpers::Searchisko.new({:base_url => @site.dcp_base_url, 
+                                              :authenticate => true, 
+                                              :searchisko_username => ENV['dcp_user'], 
+                                              :searchisko_password => ENV['dcp_password'], 
+                                              :cache => @site.cache,
+                                              :logger => @site.log_faraday,
+                                              :searchisko_warnings => @site.searchisko_warnings})
+            members.each do |member|
+              unless member['username'] == 'jbossdeveloper'
+                searchisko.normalize('contributor_profile_by_vimeo_username', member['username']) do |contributor|
+                  if !contributor['sys_contributor'].nil?
+                    @cast << add_social_links(contributor['contributor_profile'])
+                  elsif !member['display_name'].nil? && !member['display_name'].strip.empty?
+                    @cast << OpenStruct.new({:sys_title => member['display_name']})
+                  end
+                end
             end
-          end
+            end 
+          end 
         end
 
         def searchisko_payload

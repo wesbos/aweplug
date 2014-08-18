@@ -2,6 +2,7 @@ require 'pathname'
 require 'asciidoctor'
 require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/searchisko'
+require 'aweplug/helpers/searchisko_social'
 require 'aweplug/helpers/cdn'
 require 'json'
 
@@ -18,6 +19,8 @@ module Aweplug
     class AsciidocExample 
       include Aweplug::Helper::Git::Commit::Metadata
       include Aweplug::Helper::Git::Repository
+      include Aweplug::Helpers::SearchiskoSocial
+  
 
       # Public: Initialization method, used in the awestruct pipeline. This
       #         makes use of the Aweplug::Helper::Searchisko class, please see 
@@ -98,6 +101,7 @@ module Aweplug
           # TODO: Skip adding the page to the site if it's already there
 
           page = site.engine.load_site_page path
+          
           page.layout = @layout
           # TODO: Set the imagedir attribute for the page
           page.output_dir =  File.join(@output_dir, File.basename(page.output_path, File.extname(page.output_path))).downcase
@@ -115,8 +119,10 @@ module Aweplug
                       # Will need to strip html tags for summary
                       :summary => doc.sections.first.blocks.first.content,
                       :searchisko_type => 'jbossdeveloper_example',
-                      :searchisko_id => Digest::SHA1.hexdigest(doc.doctitle)[0..7],
+                      :searchisko_id => Digest::SHA1.hexdigest(doc.doctitle)[0..7]
                     }
+
+          metadata[:contributors] = metadata[:commits].collect { |c| c[:author_email] }.uniq
 
           site.pages << page
 
@@ -125,7 +131,7 @@ module Aweplug
             :sys_description => metadata[:summary],
             :sys_content => doc.render, 
             :sys_url_view => "#{site.base_url}#{site.ctx_root.nil? ? '/' : '/' + site.ctx_root + '/'}#{page.output_dir}",
-            :contributors => metadata[:commits].collect { |c| c[:author_email] }.unshift(metadata[:author]).uniq,
+            :contributors => metadata[:contributors],
             :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
             :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
           } 
@@ -140,6 +146,29 @@ module Aweplug
                                     metadata[:searchisko_id],
                                     searchisko_hash.to_json)
           end
+
+          unless metadata[:author].nil?
+            searchisko.normalize('contributor_profile_by_jbossdeveloper_quickstart_author', metadata[:author]) do |normalized|
+              if normalized['sys_contributor'].nil?
+                metadata[:author] = OpenStruct.new({:sys_title => metadata[:author]})
+              else
+                metadata[:author] = add_social_links(normalized['contributor_profile'])
+              end
+            end
+          end
+
+          metadata[:contributors].collect! do |contributor|
+            searchisko.normalize('contributor_profile_by_email', contributor) do |normalized|
+              if !normalized['sys_contributor'].nil?
+                contributor = add_social_links(normalized['contributor_profile'])
+              elsif !contributor.nil? && !contributor.strip.empty?
+                contributor = OpenStruct.new({:sys_title => contributor})
+              end
+            end
+          end
+          metadata[:contributors].delete(metadata[:author])
+
+
           page.send('metadata=', metadata)
         end
       end
