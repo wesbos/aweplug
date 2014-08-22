@@ -115,23 +115,11 @@ module Aweplug
             end
 
             unless metadata[:author].nil?
-              searchisko.normalize('contributor_profile_by_jbossdeveloper_quickstart_author', metadata[:author]) do |normalized|
-                if normalized['sys_contributor'].nil?
-                  metadata[:author] = OpenStruct.new({:sys_title => metadata[:author]})
-                else
-                  metadata[:author] = add_social_links(normalized['contributor_profile'])
-                end
-              end
+              metadata[:author] = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', metadata[:author], searchisko
             end
 
             metadata[:contributors].collect! do |contributor|
-              searchisko.normalize('contributor_profile_by_jbossdeveloper_quickstart_author', contributor) do |normalized|
-                if !normalized['sys_contributor'].nil?
-                  contributor = add_social_links(normalized['contributor_profile'])
-                elsif !contributor.nil? && !contributor.strip.empty?
-                  contributor = OpenStruct.new({:sys_title => contributor})
-                end
-              end
+              contributor = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', contributor, searchisko
             end
             metadata[:contributors].delete(metadata[:author])
 

@@ -24,6 +24,16 @@ module Aweplug
         contributor
       end
 
+      def normalize normalization, existing, searchisko
+        searchisko.normalize(normalization, existing) do |normalized|
+          if normalized['sys_contributor'].nil?
+            return OpenStruct.new({:sys_title => existing})
+          else
+            return add_social_links(normalized['contributor_profile'])
+          end
+        end
+      end
+
       private
 
       def default a
