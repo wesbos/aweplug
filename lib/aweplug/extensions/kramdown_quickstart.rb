@@ -6,6 +6,7 @@ require 'kramdown'
 require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
+require 'aweplug/helpers/searchisko_social'
 require 'json'
 require 'parallel'
 require 'pry'
@@ -26,6 +27,7 @@ module Aweplug
       class Quickstart
         include Aweplug::Helper::Git::Commit::Metadata
         include Aweplug::Helper::Git::Repository
+        include Aweplug::Helpers::SearchiskoSocial
 
         # Public: Initialization method, used in the awestruct pipeline.
         #
@@ -76,6 +78,13 @@ module Aweplug
             site.send('cache=', Aweplug::Cache::YamlFileCache.new)
           end
           Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 40) do |file|
+            searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
+                                                           :authenticate => true, 
+                                                           :searchisko_username => ENV['dcp_user'], 
+                                                           :searchisko_password => ENV['dcp_password'], 
+                                                           :cache => site.cache,
+                                                           :logger => site.log_faraday,
+                                                           :searchisko_warnings => site.searchisko_warnings})
             next if @excludes.include?(File.dirname(file))
 
             # Skip if the site already has this page
@@ -100,11 +109,21 @@ module Aweplug
                 add_image_to_site(site, image_path) if File.exist? image_path
               end
             end 
-            page.send 'metadata=', metadata
 
             unless !@push_to_searchisko || site.profile =~ /development/
-              send_to_searchisko(metadata, page, site, converted_html)
+              send_to_searchisko(searchisko, metadata, page, site, converted_html)
             end
+
+            unless metadata[:author].nil?
+              metadata[:author] = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', metadata[:author], searchisko
+            end
+
+            metadata[:contributors].collect! do |contributor|
+              contributor = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', contributor, searchisko
+            end
+            metadata[:contributors].delete(metadata[:author])
+
+            page.send 'metadata=', metadata
 
             if site.dev_mat_techs.nil?
               site.send('dev_mat_techs=', []);
@@ -122,7 +141,7 @@ module Aweplug
         # Private: Sends the metadata to Searchisko.
         #
         # Returns nothing.
-        def send_to_searchisko(metadata, page, site, converted_html)
+        def send_to_searchisko(searchisko, metadata, page, site, converted_html)
           metadata[:searchisko_id] = Digest::SHA1.hexdigest(metadata[:title])[0..7]
           metadata[:searchisko_type] = 'jbossdeveloper_quickstart'
 
@@ -141,16 +160,6 @@ module Aweplug
             :github_repo_url => metadata[:github_repo_url],
             :experimental => metadata[:experimental]
           } 
-
-          # Not sure if it's better to do this once per class, 
-          # once per site, or once per invocation
-          searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
-                                                         :authenticate => true, 
-                                                         :searchisko_username => ENV['dcp_user'], 
-                                                         :searchisko_password => ENV['dcp_password'], 
-                                                         :cache => site.cache,
-                                                         :logger => site.log_faraday,
-                                                         :searchisko_warnings => site.searchisko_warnings})
 
           searchisko.push_content(metadata[:searchisko_type], 
                                     metadata[:searchisko_id], 
@@ -208,6 +217,15 @@ module Aweplug
           metadata[:contributors].delete(metadata[:author])
           metadata[:product] = @product if @product
           metadata[:experimental] = @experimental
+          metadata[:published] = DateTime.parse(metadata[:commits].first[:date]) unless metadata[:commits].empty?
+          unless metadata[:current_branch] == 'HEAD'
+            git_ref = metadata[:current_branch]
+          else
+            git_ref = metadata[:current_tag] || 'HEAD'
+          end
+          metadata[:download] = "#{metadata[:github_repo_url]}/archive/#{git_ref}.zip"
+          metadata[:browse] = "#{metadata[:github_repo_url]}/tree/#{git_ref}"
+          metadata[:scm] = 'github'
           metadata
         end
 

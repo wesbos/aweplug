@@ -35,4 +35,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'guard-rspec', '~> 3.0.0'
   gem.add_development_dependency 'rake', '~> 10.0.4'
   gem.add_development_dependency 'pry', '~> 0.9.12'
+  gem.add_development_dependency 'kramdown', '~> 1.0.2'
+  gem.add_development_dependency 'awestruct', '~> 0.5.4.rc3'
 end

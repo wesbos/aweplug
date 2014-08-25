@@ -3,6 +3,7 @@ require 'faraday_middleware'
 require 'aweplug/cache/yaml_file_cache'
 require 'logger'
 require 'json'
+require 'uri'
 
 # WARNING: monkey patching faraday
 # TODO: See if we can the new refinements to work
@@ -62,11 +63,29 @@ module Aweplug
           builder.request :url_encoded
           builder.request :retry
           builder.response :raise_error if opts[:raise_error]
-          builder.use FaradayMiddleware::Caching, opts[:cache], {}
+          #builder.use FaradayMiddleware::Caching, opts[:cache], {}
           #builder.response :json, :content_type => /\bjson$/
           builder.adapter opts[:adapter] || :net_http
         end
+        @cache = opts[:cache]
         @searchisko_warnings = opts[:searchisko_warnings] if opts.has_key? :searchisko_warnings
+      end
+
+      # Public: Performs a GET normalization against the Searchisko API
+      #
+      # normalization - The id of the normalization to use
+      # id - The id to normalize
+      def normalize normalization, id
+        key = "normalization-#{normalization}-#{id}"
+        json = @cache.read(key)
+        if json.nil?
+          response = get "/normalization/#{normalization}/#{id}"
+          if response.success?
+            json = JSON.load(response.body)
+            @cache.write(key, json)
+          end
+        end
+        yield json
       end
 
       # Public: Performs a GET search against the Searchisko instance using 
@@ -99,7 +118,7 @@ module Aweplug
       #
       # Returns the Faraday Response for the request.
       def get path, params = {}
-        response = @faraday.get "/v1/rest/" + path, params
+        response = @faraday.get URI.escape("/v1/rest/" + path), params
         unless response.success?
           $LOG.warn "Error making searchisko request to #{path}. Status: #{response.status}. Params: #{params}" if $LOG.warn?
         end
