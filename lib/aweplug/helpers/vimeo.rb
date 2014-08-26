@@ -1,7 +1,6 @@
 require 'oauth'
 require 'aweplug/cache/yaml_file_cache'
 require 'aweplug/helpers/video'
-require 'aweplug/helpers/identity'
 require 'aweplug/helpers/searchisko_social'
 require 'tilt'
 require 'yaml'
@@ -65,7 +64,6 @@ module Aweplug
             partial path, {:video => video, :parent => page}
           end
         end
-        Tilt.new(path.to_s).render(Object.new, :video => video, :page => page, :site => site)
       end
 
       # Internal: Extracts a firstname from a full name
@@ -142,7 +140,11 @@ module Aweplug
         end
 
         def thumb_url
-          @video['thumbnails']['thumbnail'][1]['_content']
+          if @video['thumbnails']
+            @video["thumbnails"]["thumbnail"][1]["_content"]
+          else
+            ""
+          end
         end
 
         def duration

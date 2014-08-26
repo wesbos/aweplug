@@ -92,14 +92,6 @@ module Aweplug
         raise NotImplementedError
       end
 
-      def load_thumb_url
-        if @video['thumbnails']
-          @thumb = @video["thumbnails"]["thumbnail"][1]
-        else
-          @thumb = {"_content" => ""}
-        end
-      end
-
       def load_cast
         @cast = []
         if @site.identity_manager && @video['cast']
