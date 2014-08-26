@@ -45,14 +45,11 @@ module Aweplug
       #
       # Returns a new instance of Searchisko.
       def initialize opts={} 
+        unless [:searchisko_username, :searchisko_password].all? {|required| opts.key? required}
+          raise 'Missing searchisko credentials'
+        end
         @faraday = Faraday.new(:url => opts[:base_url]) do |builder|
-          if opts[:authenticate]
-            if opts[:searchisko_username] && opts[:searchisko_password]
-              builder.request :basic_auth, opts[:searchisko_username], opts[:searchisko_password]
-            else
-              $LOG.warn 'Missing username and / or password for searchisko' if $LOG.warn
-            end
-          end
+          builder.request :basic_auth, opts[:searchisko_username], opts[:searchisko_password]
           if (opts[:logger]) 
             if (opts[:logger].is_a?(::Logger))
               builder.response :logger, @logger = opts[:logger]
@@ -63,7 +60,7 @@ module Aweplug
           builder.request :url_encoded
           builder.request :retry
           builder.response :raise_error if opts[:raise_error]
-          #builder.use FaradayMiddleware::Caching, opts[:cache], {}
+          builder.use FaradayMiddleware::Caching, opts[:cache], {}
           #builder.response :json, :content_type => /\bjson$/
           builder.adapter opts[:adapter] || :net_http
         end
