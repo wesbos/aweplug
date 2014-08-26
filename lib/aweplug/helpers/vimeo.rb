@@ -9,6 +9,8 @@ module Aweplug
   module Helpers
     module Vimeo
 
+      VIMEO_URL_PATTERN = /^https?:\/\/vimeo\.com\/(album)?\/?([0-9]+)\/?$/
+
       # Public: Embeds videos from vimeo inside a div. Retrieves the title
       # and video cast from vimeo using the authenticated API.
       # TODO Builds follow links (blog, facebook, twitter, linkedin) for any
@@ -33,25 +35,81 @@ module Aweplug
       end
 
       def video(url)
-        if site.video_cache.nil?
-          site.send('video_cache=', {})
-        end
-        if site.video_cache.key?(url)
-          site.video_cache[url]
+        add_vimeo_video url: url, site: site
+      end
+
+      def add_vimeo_video (url: , site: , product: nil, push_to_searchisko: true)
+        site.send("vimeo_cache=", {}) if site.vimeo_cache.nil?
+        site.send('cache=', Aweplug::Cache::YamlFileCache.new) if site.cache.nil?
+        if url =~ VIMEO_URL_PATTERN
+          if $1 == 'album'
+            videos = []
+            albumJson = JSON.load(exec_method('vimeo.albums.getVideos', {album_id: $2, per_page: 50, full_response: 1, format: 'json'}, site))
+            albumJson['videos']['video'].each do |v|
+              videos << add_video(v['id'], product, push_to_searchisko, site)
+            end
+            videos
+          else
+            add_video($2, product, push_to_searchisko, site)
+          end
         else
-          id = url.split('http://vimeo.com/').last
-          videoJson = exec_method "vimeo.videos.getInfo", 
-                                  {format: 'json', video_id: id}
-          video = VimeoVideo.new(JSON.load(videoJson)['video'].first, site)
-          site.video_cache[url] = video
+          raise "#{url} not a Vimeo URL"
+        end
+      end
+
+      private
+
+      def add_video (id, product, push_to_searchisko, site)
+        if site.vimeo_cache.has_key? id
+          site.vimeo_cache[id]
+        else
+          page_path = Pathname.new(File.join 'video', 'vimeo', "#{id}.html")
+
+          videoJson = JSON.load(exec_method "vimeo.videos.getInfo", {format: 'json', video_id: id}, site)['video'].first
+          video = Aweplug::Helpers::Vimeo::VimeoVideo.new videoJson, site
+          add_video_to_site video, site
+
+          send_video_to_searchisko video, site, product, push_to_searchisko
+          site.vimeo_cache[id] = video
           video
         end
       end
 
-      protected 
+      def add_video_to_site (video, site)
+        page_path = Pathname.new(File.join 'video', 'vimeo', "#{video.id}.html")
+        page = ::Awestruct::Page.new(site,
+                                      ::Awestruct::Handlers::LayoutHandler.new(site,
+                                      ::Awestruct::Handlers::TiltHandler.new(site,
+                                        ::Aweplug::Handlers::SyntheticHandler.new(site, '', page_path))))
+        page.layout = site.video_layout || 'video_page'
+        page.output_path = File.join 'video', 'vimeo', video.id,'index.html'
+        page.stale_output_callback = ->(p) { return (File.exist?(p.output_path) && File.mtime(__FILE__) > File.mtime(p.output_path)) }
+        page.send('title=', video.title)
+        page.send('description=', video.description)
+        page.send('video=', video)
+        page.send('video_url=', video.url)
+        site.pages << page 
+      end
+
+      def send_video_to_searchisko (video, site, product, push_to_searchisko )
+        unless (payload = video.searchisko_payload).nil?
+          unless  !push_to_searchisko || site.profile =~ /development/
+            searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
+                                                            :authenticate => true, 
+                                                            :searchisko_username => ENV['dcp_user'], 
+                                                            :searchisko_password => ENV['dcp_password'], 
+                                                            :cache => site.cache,
+                                                            :logger => site.log_faraday,
+                                                            :searchisko_warnings => site.searchisko_warnings})
+            payload.merge!({target_product: product}) unless product.nil?
+            searchisko.push_content('jbossdeveloper_vimeo', video.id, payload.to_json)
+          end 
+        end
+      end
+
 
       def render(video, default_snippet, snippet)
-        if !video.fetch_failed
+        unless video.fetch_failed
           if snippet
             path = snippet
           else
@@ -79,11 +137,11 @@ module Aweplug
       # options  - Hash of the options (names and values) to send to Vimeo
       #
       # Returns JSON retreived from the Vimeo API
-      def exec_method(method, options)
-        if access_token
+      def exec_method(method, options, site)
+        if access_token site
           query = "http://vimeo.com/api/rest/v2?method=#{method}&" 
           query += options.inject([]) {|a, (k,v)| a << "#{k}=#{v}"; a}.join("&")
-          access_token.get(query).body
+          access_token(site).get(query).body
         end
       end
 
@@ -95,8 +153,7 @@ module Aweplug
       # site - Awestruct Site instance
       # 
       # Returns an OAuth::AccessToken for the Vimeo API 
-      def access_token
-        site ||= @site
+      def access_token site
         if @access_token
           @access_token
         else

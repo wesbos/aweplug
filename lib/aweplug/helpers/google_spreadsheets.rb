@@ -177,7 +177,7 @@ module Aweplug
           raise "Error loading spreadsheet at #{path}"
         end
         if response.body.include? "<!DOCTYPE html>"
-          raise "Spreadsheet is not public, either enable authentication or publish the spreadsheet to the web"
+          raise "#{path} is not public, either enable authentication or publish the spreadsheet to the web"
         end
         response
       end
