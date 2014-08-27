@@ -208,6 +208,7 @@ module Aweplug
             file_ext = File.extname(uri.path)
             if uri.scheme
               raw_content = Net::HTTP.get(uri)
+              id = uri.host.gsub(/\./, '_')
             else
               # Some file paths may have query strings or fragments...
               base = Pathname.new(@base)
@@ -218,8 +219,9 @@ module Aweplug
               else
                 raise "Unable to read file from #{abs}"
               end
+              id = ""
             end
-            id = uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
+            id << uri.path[0, uri.path.length - file_ext.length].gsub(/[\/]/, "_").gsub(/^[\.]{1,2}/, "")
             ctx_path = ctx_path file_ext
             cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @cdn_out_dir, @version).add(id, file_ext, Content.new(raw_content, @minify, file_ext))
             res = URI.parse("#{@cdn_http_base}/#{cdn_file_path}")
