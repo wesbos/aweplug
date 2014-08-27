@@ -38,7 +38,7 @@ module Aweplug
         if @version
           version(name, ext, content)
         else
-          File.open(@tmp_dir.join(name + ext), 'w') { |file| file.write(content) }
+          File.open(@tmp_dir.join(name + ext), 'w') { |file| file.write(content.read) }
           name(name, ext)
         end
       end
