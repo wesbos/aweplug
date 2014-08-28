@@ -84,6 +84,7 @@ module Aweplug
         page.layout = site.video_layout || 'video_page'
         page.output_path = File.join 'video', 'vimeo', video.id,'index.html'
         page.stale_output_callback = ->(p) { return (File.exist?(p.output_path) && File.mtime(__FILE__) > File.mtime(p.output_path)) }
+        page.url = "#{site.base_url}/video/vimeo/#{video.id}"
         page.send('title=', video.title)
         page.send('description=', video.description)
         page.send('video=', video)
