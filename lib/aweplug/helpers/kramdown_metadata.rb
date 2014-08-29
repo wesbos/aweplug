@@ -123,7 +123,7 @@ module Kramdown
       def parse_experimental
         @src.pos += @src.matched_size
         v = @src[2].rstrip
-        @root.options[:metadata][:experimental] = 'true'.casecmp(v) || 'yes'.casecmp(v)
+        @root.options[:metadata][:experimental] = 'true'.casecmp(v) == 0 || 'yes'.casecmp(v) == 0
       end
       define_parser(:experimental, /^(Experimental:)#{OPT_SPACE}(.*?)\s*?\n/)
 
