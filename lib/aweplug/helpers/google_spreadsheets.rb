@@ -35,7 +35,7 @@ module Aweplug
         end
 
         def by_col row_labels: false, col_labels: false
-          data = by do |res, col, row, content|
+          res = by do |res, col, row, content|
             res[col] ||= {}
             res[col][row] = content
           end
