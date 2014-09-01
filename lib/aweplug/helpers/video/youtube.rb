@@ -1,10 +1,10 @@
 require 'oauth'
-require 'aweplug/cache/yaml_file_cache'
 require 'aweplug/helpers/searchisko_social'
 require 'aweplug/helpers/video/helpers'
 require 'yaml'
 require 'google/api_client'
 require 'aweplug/helpers/video/youtube_video'
+require 'aweplug/cache/file_cache'
 
 module Aweplug
   module Helpers
@@ -24,7 +24,7 @@ module Aweplug
 
         def initialize site
           @site = site
-          site.send('cache=', Aweplug::Cache::YamlFileCache.new) if site.cache.nil?
+          site.send('cache=', Aweplug::Cache::FileCache.new) if site.cache.nil?
         end
 
         def add(url, product: nil, push_to_searchisko: true)

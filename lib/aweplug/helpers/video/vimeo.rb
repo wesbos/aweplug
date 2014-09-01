@@ -1,5 +1,5 @@
 require 'oauth'
-require 'aweplug/cache/yaml_file_cache'
+require 'aweplug/cache/file_cache'
 require 'aweplug/helpers/video/vimeo_video'
 require 'aweplug/helpers/searchisko_social'
 require 'aweplug/helpers/video/helpers'
@@ -20,7 +20,7 @@ module Aweplug
 
         def initialize site, logger: true, raise_error: false, adapter: nil
           @site = site
-          site.send('cache=', Aweplug::Cache::YamlFileCache.new) if site.cache.nil?
+          site.send('cache=', Aweplug::Cache::FileCache.new) if site.cache.nil?
           @faraday = Faraday.new(:url => BASE_URL) do |builder|
             if (logger) 
               if (logger.is_a?(::Logger))

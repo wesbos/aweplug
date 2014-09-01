@@ -4,7 +4,7 @@ require 'pathname'
 require 'faraday'
 require 'faraday_middleware' 
 require 'logger'
-
+require 'aweplug/cache/file_cache'
 
 module Aweplug
   module Helpers
@@ -106,6 +106,7 @@ module Aweplug
       def initialize site: , authenticate: false, logger: true, raise_error: false, adapter: nil
         @site = site
         @authenticate = authenticate
+        site.send('cache=', Aweplug::Cache::FileCache.new) if site.cache.nil?
         @faraday = Faraday.new(:url => BASE_URL) do |builder|
           if authenticate
             oauth2_client = client_signet
@@ -122,7 +123,7 @@ module Aweplug
           builder.request :retry
           builder.response :raise_error if raise_error
           builder.use FaradayMiddleware::FollowRedirects
-          #builder.use FaradayMiddleware::Caching, opts[:cache], {}
+          builder.use FaradayMiddleware::Caching, site.cache, {}
           #builder.response :json, :content_type => /\bjson$/
           builder.adapter adapter || :net_http
         end

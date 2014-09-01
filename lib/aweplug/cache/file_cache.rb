@@ -1,22 +1,22 @@
-require 'yaml/store'
+require 'pstore'
 require 'fileutils'
 
 module Aweplug
   module Cache
     # Public: A simple caching implementation.
-    #         Internally it using a YAML::Store for a file backing. It also saves
+    #         Internally it using a PStore for a file backing. It also saves
     #         data in a hash for the life of the object. Any keys which are 
     #         Strings are frozen before being used.
-    class YamlFileCache
+    class FileCache
       # Public: Initialization method.
       #
       # opts - A Hash of options
       #         filename: Name of the File used for caching. Defaults to 
-      #         'tmp/yaml.cache.store'.
+      #         'tmp/cache.store'.
       #
       # Examples
       #
-      #   store = Aweplug::Cache::YamlFileCache.new
+      #   store = Aweplug::Cache::FileCache.new
       #   store.write('key', 'data')
       #   # => 'data'
       #   store.read('key')
@@ -24,9 +24,9 @@ module Aweplug
       #
       # Returns a new instance of the cache.
       def initialize(opts = {})
-        opts = {filename: '_tmp/yaml.cache.store'}.merge(opts)
+        opts = {filename: '_tmp/cache.store'}.merge(opts)
         FileUtils.mkdir_p(File.dirname opts[:filename])
-        @file_store = YAML::Store.new opts[:filename]
+        @file_store = PStore.new opts[:filename], true
         @memory_store = {}
       end
 
