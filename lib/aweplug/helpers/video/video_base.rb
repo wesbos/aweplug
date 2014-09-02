@@ -90,7 +90,7 @@ module Aweplug
           contributor_exclude = Pathname.new(@site.dir).join("_config").join("searchisko_contributor_exclude.yml")
           if contributor_exclude.exist?
             yaml = YAML.load_file(contributor_exclude)
-            return yaml['vimeo'] unless yaml['vimeo'].nil?
+            return yaml[provider] unless yaml[provider].nil?
           end
           {}
         end

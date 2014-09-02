@@ -17,8 +17,8 @@ module Aweplug
           @url = "http://www.youtube.com/v=#{@id}"
           @duration = Duration.new(video['contentDetails']['duration'])
           @thumb_url = @video["thumbnails"]["medium"]["url"]
-          @cast = contributor_exclude.include?(@video['channelTitle']) ? [ { name: @video['channelTitle'] } ] : []
-          @normalized_cast = @cast.collect { |c| normalize('contributor_profile_by_jbossdeveloper_quickstart_author', c['name'], @searchisko) }
+          @cast = contributor_exclude.include?(@video['channelTitle']) ? [] : [ { :name => @video['channelTitle'] } ]
+          @normalized_cast = @cast.collect { |c| normalize('contributor_profile_by_jbossdeveloper_quickstart_author', c[:name], @searchisko) }
           @modified_date = @published_date = DateTime.parse(@video['publishedAt'])
         end
 
