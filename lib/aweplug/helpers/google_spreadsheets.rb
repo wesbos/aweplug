@@ -4,7 +4,7 @@ require 'pathname'
 require 'faraday'
 require 'faraday_middleware' 
 require 'logger'
-
+require 'aweplug/cache/file_cache'
 
 module Aweplug
   module Helpers
@@ -35,7 +35,7 @@ module Aweplug
         end
 
         def by_col row_labels: false, col_labels: false
-          data = by do |res, col, row, content|
+          res = by do |res, col, row, content|
             res[col] ||= {}
             res[col][row] = content
           end
@@ -106,6 +106,7 @@ module Aweplug
       def initialize site: , authenticate: false, logger: true, raise_error: false, adapter: nil
         @site = site
         @authenticate = authenticate
+        site.send('cache=', Aweplug::Cache::FileCache.new) if site.cache.nil?
         @faraday = Faraday.new(:url => BASE_URL) do |builder|
           if authenticate
             oauth2_client = client_signet
@@ -122,7 +123,7 @@ module Aweplug
           builder.request :retry
           builder.response :raise_error if raise_error
           builder.use FaradayMiddleware::FollowRedirects
-          #builder.use FaradayMiddleware::Caching, opts[:cache], {}
+          builder.use FaradayMiddleware::Caching, site.cache, {}
           #builder.response :json, :content_type => /\bjson$/
           builder.adapter adapter || :net_http
         end
@@ -174,7 +175,7 @@ module Aweplug
       def get path, params = {}
         response = @faraday.get URI.escape("#{path}/#{@authenticate ? 'private' : 'public'}/full"), params
         unless response.success?
-          raise "Error loading spreadsheet at #{path}"
+          raise "#{response.status} loading spreadsheet at #{path}."
         end
         if response.body.include? "<!DOCTYPE html>"
           raise "#{path} is not public, either enable authentication or publish the spreadsheet to the web"

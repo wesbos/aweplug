@@ -10,6 +10,7 @@ require 'aweplug/helpers/searchisko_social'
 require 'json'
 require 'parallel'
 require 'pry'
+require 'aweplug/cache/file_cache'
 
 module Aweplug
   module Extensions
@@ -75,7 +76,7 @@ module Aweplug
         # Returns nothing.
         def execute site
           if site.cache.nil?
-            site.send('cache=', Aweplug::Cache::YamlFileCache.new)
+            site.send('cache=', Aweplug::Cache::FileCache.new)
           end
           Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 40) do |file|
             searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 

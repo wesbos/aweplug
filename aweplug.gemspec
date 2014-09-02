@@ -39,4 +39,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'kramdown', '~> 1.0.2'
   gem.add_development_dependency 'awestruct', '~> 0.5.5'
   gem.add_development_dependency 'google-api-client', '~> 0.7'
+  gem.add_development_dependency 'ruby-duration', '~>3.1'
 end

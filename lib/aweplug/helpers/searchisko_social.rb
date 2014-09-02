@@ -24,14 +24,22 @@ module Aweplug
         contributor
       end
 
-      def normalize normalization, existing, searchisko
-        searchisko.normalize(normalization, existing) do |normalized|
-          if normalized['sys_contributor'].nil?
-            return OpenStruct.new({:sys_title => existing})
-          else
-            return add_social_links(normalized['contributor_profile'])
+      def normalize normalization, existing, searchisko, name = nil
+        res = nil
+        if !existing.nil?
+          searchisko.normalize(normalization, existing) do |normalized|
+            unless normalized['sys_contributor'].nil?
+              res = add_social_links(normalized['contributor_profile'])
+            end
+          end
+        elsif !name.nil?
+          searchisko.normalize('contributor_profile_by_jbossdeveloper_quickstart_author', name) do |normalized|
+            unless normalized['sys_contributor'].nil?
+              res = add_social_links(normalized['contributor_profile'])
+            end
           end
         end
+        res || OpenStruct.new({ :sys_title => name || existing })
       end
 
       private

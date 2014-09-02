@@ -4,6 +4,7 @@ require 'aweplug/helpers/git_metadata'
 require 'aweplug/helpers/searchisko'
 require 'aweplug/helpers/searchisko_social'
 require 'aweplug/helpers/cdn'
+require 'aweplug/cache/file_cache'
 require 'json'
 
 module Aweplug
@@ -82,7 +83,7 @@ module Aweplug
       # Returns nothing.
       def execute site
         if site.cache.nil?
-          site.send('cache=', Aweplug::Cache::YamlFileCache.new)
+          site.send('cache=', Aweplug::Cache::FileCache.new)
         end
         searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                                        :authenticate => true, 

@@ -1,0 +1,21 @@
+- page.video_height = 500
+- page.video_width = 313
+- page.video_duration_in_seconds = page.video.duration.total
+- page.published_date = page.video.published_date.iso8601
+- page.image ||= page.video.thumb_url
+div(itemprop="video" itemscope itemtype="http://schema.org/VideoObject" data-searchisko-type="jbossdeveloper_vimeo" data-searchisko-id="#{page.video.id}")
+  link itemprop="url" href="#{site.base_url}#{page.url}"
+  meta itemprop="description" content="#{page.video.description}"
+  meta itemprop="height" content="#{page.video.height}"
+  meta itemprop="width" content="#{page.video.width}"
+  h4 itemprop="name" #{page.video.title}
+  / TODO Add more metadata
+  meta itemprop="duration" content="#{page.video.duration.iso8601}"
+  meta itemprop="thumbnailUrl" content="#{page.image}"
+  meta itemprop="thumbnail" content="#{page.image}"
+  meta itemprop="uploadDate" content="#{page.video.published_date}"
+  meta itemProp="isFamilyFriendly" content="true"
+  .flex-video
+    = page.video.embed '2664A2', page.video_width, page.video_height
+  span.contributors
+

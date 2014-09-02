@@ -15,6 +15,8 @@ require 'faraday_middleware'
 require 'base64'
 require 'nokogiri'
 require 'aweplug/helpers/searchisko_social'
+require 'aweplug/cache/file_cache'
+
 
 
 module Aweplug
@@ -159,7 +161,7 @@ module Aweplug
 
         def init_faraday site
           if site.cache.nil?
-            site.send('cache=', Aweplug::Cache::YamlFileCache.new)
+            site.send('cache=', Aweplug::Cache::FileCache.new)
           end
           @faraday ||= Faraday.new do |builder|
             if (site.log_faraday.is_a?(::Logger))
