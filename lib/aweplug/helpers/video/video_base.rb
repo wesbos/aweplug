@@ -75,7 +75,7 @@ module Aweplug
           {
             :sys_title => title,
             :sys_description => description,
-            :sys_url_view => "#{@site.base_url}/video/vimeo/#{id}",
+            :sys_url_view => detail_url,
             :author => author.nil? ? nil : author['username'],
             :contributors => cast.empty? ? nil : cast.collect {|c| c['username']},
             :sys_created => published_date.iso8601,
