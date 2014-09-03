@@ -23,8 +23,6 @@ module Aweplug
           unless @site.pages.any? {|p| p.output_path == output_path}
             add_video_to_site video, output_path, @site
             send_video_to_searchisko video, @site, product, push_to_searchisko
-          else
-            puts "Not pushing #{output_path}"
           end
           video
         end
