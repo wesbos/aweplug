@@ -19,10 +19,12 @@ module Aweplug
         end
 
         def add_video(video, product, push_to_searchisko)
-          page_path = Pathname.new(File.join 'video', video.provider, "#{video.id}.html")
-          unless File.exists? page_path
-            add_video_to_site video, page_path, @site
+          output_path = File.join 'video', video.provider, "#{video.id}.html"
+          unless @site.pages.any? {|p| p.output_path == output_path}
+            add_video_to_site video, output_path, @site
             send_video_to_searchisko video, @site, product, push_to_searchisko
+          else
+            puts "Not pushing #{output_path}"
           end
           video
         end
@@ -37,7 +39,7 @@ module Aweplug
                                                               :cache => site.cache,
                                                               :logger => site.log_faraday,
                                                               :searchisko_warnings => site.searchisko_warnings})
-              payload.merge!({target_product: product}) unless product.nil?
+              payload = payload.merge({:target_product => product}) unless product.nil?
               searchisko.push_content("jbossdeveloper_#{video.provider}", video.id, payload.to_json)
             end 
           end
@@ -50,7 +52,7 @@ module Aweplug
                                         ::Awestruct::Handlers::TiltHandler.new(site,
                                           ::Aweplug::Handlers::SyntheticHandler.new(site, '', page_path))))
           page.layout = site.video_layout || 'video_page'
-          page.output_path = File.join 'video', video.provider, video.id,'index.html'
+          page.output_path = page_path
           page.stale_output_callback = ->(p) { return (File.exist?(p.output_path) && File.mtime(__FILE__) > File.mtime(p.output_path)) }
           page.url = "#{site.base_url}/video/#{video.provider}/#{video.id}"
           page.send('title=', video.title)
