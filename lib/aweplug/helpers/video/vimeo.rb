@@ -41,23 +41,29 @@ module Aweplug
         def add(url, product: nil, push_to_searchisko: true)
           if url =~ VIMEO_URL_PATTERN
             if $1 == 'album'
-              resp = @faraday.get("me/albums/#{$2}/videos", {per_page: 50})
-              if resp.success?
-                JSON.load(resp.body)['data'].collect do |v|
-                  if v['metadata']['connections'].has_key? 'credits'
-                    respc = @faraday.get(v['metadata']['connections']['credits'])
-                    if respc.success?
-                      data = JSON.load(respc.body)['data']
-                      _add(data[0]['video'], data, product, push_to_searchisko)
+              path = "me/albums/#{$2}/videos"
+              while !path.nil?
+                resp = @faraday.get(path, {per_page: 50})
+                path = nil
+                if resp.success?
+                  json = JSON.load(resp.body)
+                  json['data'].collect do |v|
+                    if v['metadata']['connections'].has_key? 'credits'
+                      respc = @faraday.get(v['metadata']['connections']['credits'])
+                      if respc.success?
+                        data = JSON.load(respc.body)['data']
+                        _add(data[0]['video'], data, product, push_to_searchisko)
+                      else
+                        puts "Error loading #{v['metadata']['connections']['credits']}"
+                      end
                     else
-                      puts "Error loading #{v['metadata']['connections']['credits']}"
+                      _add(v['data'][0], nil, product, push_to_searchisko)
                     end
-                  else
-                    _add(v['data'][0], nil, product, push_to_searchisko)
                   end
+                  path = json['paging']['next']
+                else
+                  puts "Error loading #{path}"
                 end
-              else
-                puts "Error loading me/albums/#{$2}/videos"
               end
             else
               uri = "videos/#{$2}/credits"
