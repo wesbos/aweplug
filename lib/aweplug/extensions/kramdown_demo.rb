@@ -104,59 +104,61 @@ module Aweplug
             # We load the definition from the YAML file specified
             metadata = from_yaml(url)
           end
-          metadata[:original_url] = url
+          unless metadata.nil?
+            metadata[:original_url] = url
 
-          source = @faraday.get(metadata[:content]).body
+            source = @faraday.get(metadata[:content]).body
 
-          # Raise an error if the site already has this page
-          dir = File.join @output_dir, metadata[:id]
-          path = File.join dir, 'index.html'
-          raise "Demo '#{metadata[:id]}' already exists (built from #{url})" if ids.include? metadata[:id]
+            # Raise an error if the site already has this page
+            dir = File.join @output_dir, metadata[:id]
+            path = File.join dir, 'index.html'
+            raise "Demo '#{metadata[:id]}' already exists (built from #{url})" if ids.include? metadata[:id]
 
-          if metadata[:author]
-            metadata[:author].split(',').each_with_index do |author, i|
-              metadata[:author] = author if i == 0
-              metadata[:contributors] << author unless i == 0
+            if metadata[:author]
+              metadata[:author].split(',').each_with_index do |author, i|
+                metadata[:author] = author if i == 0
+                metadata[:contributors] << author unless i == 0
+              end
             end
+
+            if (metadata[:summary].nil? || metadata[:summary].strip.empty?) && !metadata[:converted].strip.empty?
+              metadata[:summary] = Nokogiri::HTML.parse(metadata[:converted]).css('p').first.text.gsub("\n", ' ')
+            end
+
+            validate metadata
+
+            # Not sure if it's better to do this once per class, 
+            # once per site, or once per invocation
+            searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
+                                                          :authenticate => true, 
+                                                          :searchisko_username => ENV['dcp_user'], 
+                                                          :searchisko_password => ENV['dcp_password'], 
+                                                          :cache => site.cache,
+                                                          :logger => site.log_faraday,
+                                                          :searchisko_warnings => site.searchisko_warnings})
+
+            page = add_to_site site, path, metadata[:converted]
+
+            unless !@push_to_searchisko || site.profile =~ /development/
+              send_to_searchisko(searchisko, metadata, page, site, metadata[:converted])
+            end
+            
+            unless metadata[:author].nil?
+                metadata[:author] = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', metadata[:author], searchisko
+            end
+
+            metadata[:contributors].collect! do |contributor|
+              contributor = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', contributor, searchisko
+            end
+            metadata[:contributors].delete(metadata[:author])
+
+            page.send 'metadata=', metadata
+
+            if site.dev_mat_techs.nil?
+              site.send('dev_mat_techs=', []);
+            end
+            site.dev_mat_techs << metadata[:technologies].flatten
           end
-
-          if (metadata[:summary].nil? || metadata[:summary].strip.empty?) && !metadata[:converted].strip.empty?
-            metadata[:summary] = Nokogiri::HTML.parse(metadata[:converted]).css('p').first.text.gsub("\n", ' ')
-          end
-
-          validate metadata
-
-          # Not sure if it's better to do this once per class, 
-          # once per site, or once per invocation
-          searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
-                                                         :authenticate => true, 
-                                                         :searchisko_username => ENV['dcp_user'], 
-                                                         :searchisko_password => ENV['dcp_password'], 
-                                                         :cache => site.cache,
-                                                         :logger => site.log_faraday,
-                                                         :searchisko_warnings => site.searchisko_warnings})
-
-          page = add_to_site site, path, metadata[:converted]
-
-          unless !@push_to_searchisko || site.profile =~ /development/
-            send_to_searchisko(searchisko, metadata, page, site, metadata[:converted])
-          end
-          
-          unless metadata[:author].nil?
-              metadata[:author] = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', metadata[:author], searchisko
-          end
-
-          metadata[:contributors].collect! do |contributor|
-            contributor = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', contributor, searchisko
-          end
-          metadata[:contributors].delete(metadata[:author])
-
-          page.send 'metadata=', metadata
-
-          if site.dev_mat_techs.nil?
-            site.send('dev_mat_techs=', []);
-          end
-          site.dev_mat_techs << metadata[:technologies].flatten
         end
 
         def init_faraday site
@@ -194,7 +196,7 @@ module Aweplug
               metadata
             end
           else
-            puts "#{response.code} loading #{url}"
+            puts "#{response.status} loading #{url}"
           end
         end
 
