@@ -285,6 +285,7 @@ module Aweplug
       end
 
       def cdn(src)
+        site = site || @site
         if site.cdn_http_base
           if src =~ Resources::local_path_pattern(site.base_url)
             src = $1
