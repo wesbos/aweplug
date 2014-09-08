@@ -7,7 +7,6 @@ require 'tilt'
 require 'yaml'
 require 'faraday'
 require 'faraday_middleware'
-require 'faraday/request/authorization'
 
 module Aweplug
   module Helpers
@@ -31,6 +30,7 @@ module Aweplug
             end
             builder.request :url_encoded
             builder.request :retry
+            builder.response :gzip
             builder.request :authorization, 'bearer', ENV['vimeo_access_token']
             builder.use FaradayMiddleware::FollowRedirects
             builder.use FaradayMiddleware::Caching, site.cache, {}

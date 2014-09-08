@@ -31,6 +31,17 @@ module Aweplug
   module Helpers
     # Public: A helper class for using Searchisko.
     class Searchisko 
+
+      def self.default site
+        Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
+                                          :authenticate => true, 
+                                          :searchisko_username => ENV['dcp_user'], 
+                                          :searchisko_password => ENV['dcp_password'], 
+                                          :cache => site.cache,
+                                          :logger => site.log_faraday,
+                                          :searchisko_warnings => site.searchisko_warnings})
+      end
+
       # Public: Initialization of the object, keeps a Faraday connection cached.
       #
       # opts - symbol keyed hash. Current keys used:
@@ -157,16 +168,11 @@ module Aweplug
             @logger.debug "request body: #{req.body}"
           end
         end
-        body = JSON.parse(resp.body)
-        if @logger && (!resp.status.between?(200, 300) || body.has_key?("warnings"))
-          @logger.debug "response body: #{resp.body}"
-        end
-        if $LOG.warn?
-          if !resp.success?
-            $LOG.warn "Error making searchisko request to '#{path}'. Status: #{resp.status}. 
-                       Params: #{params}. Response body: #{resp.body}"
-          elsif body.has_key? "warnings"
-            unless @searchisko_warnings.nil?
+        if resp.success?
+          body = JSON.parse(resp.body)
+          if !@logger.nil? && body.has_key?("warnings")
+            @logger.debug "response body: #{resp.body}"
+            if !@searchisko_warnings.nil?
               File.open(@searchisko_warnings, File::RDWR|File::CREAT, 0644) do |file|
                 file.flock(File::LOCK_EX)
                 if file.size > 0
@@ -178,9 +184,15 @@ module Aweplug
                 file.rewind
                 file.write(content.to_json)
               end
-            else
+            elsif $LOG.warn
               $LOG.warn "Searchisko content POST to '#{path}' succeeded with warnings: #{body["warnings"]}"
             end
+          end
+        elsif @logger
+          @logger.debug "response body: #{resp.body}"
+          if $LOG.error
+            $LOG.error "Error making searchisko request to '#{path}'. Status: #{resp.status}. 
+Params: #{params}. Response body: #{resp.body}"
           end
         end
       end

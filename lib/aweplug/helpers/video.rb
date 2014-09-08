@@ -36,9 +36,11 @@ module Aweplug
       end
 
       def add_video(url, site, product: nil, push_to_searchisko: true)
+        @youtube ||= Aweplug::Helpers::Video::YouTube.new(site)
+        @vimeo ||= Aweplug::Helpers::Video::Vimeo.new(site)
         videos = []
-        videos << Aweplug::Helpers::Video::Vimeo.new(site).add(url, product: product, push_to_searchisko: push_to_searchisko)
-        videos << Aweplug::Helpers::Video::YouTube.new(site).add(url, product: product, push_to_searchisko: push_to_searchisko)        
+        videos << @vimeo.add(url, product: product, push_to_searchisko: push_to_searchisko)
+        videos << @youtube.add(url, product: product, push_to_searchisko: push_to_searchisko)        
         videos = videos.flatten.reject { |v| v.nil? }
         videos.length > 1 ? videos : videos.first
       end
