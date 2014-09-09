@@ -105,7 +105,7 @@ module Aweplug
               :preview_link => book['volumeInfo']['previewLink'],
               :info_link => book['volumeInfo']['infoLink'],
               :publisher => book['volumeInfo']['publisher'],
-              #:sys_content => book['volumeInfo']['description'],
+              :sys_content => book['volumeInfo']['description'],
               :sys_created => published,
               :normalized_authors => normalized_authors,
               :average_rating => book['volumeInfo']['averageRating']
