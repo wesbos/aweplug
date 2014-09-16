@@ -2,9 +2,8 @@ require 'uri'
 require 'json'
 require 'date'
 require 'aweplug/helpers/searchisko'
+require 'aweplug/helpers/faraday'
 require 'aweplug/cache/file_cache'
-require 'faraday'
-require 'faraday_middleware'
 require 'parallel'
 
 module Aweplug
@@ -12,45 +11,44 @@ module Aweplug
     # Helper function for searching and retrieving documents from Strata.
     class Strata
 
-      def search_then_index strata_url, search_opts = {}, searchisko_opts = {}, logger = nil, cache = nil
-        faraday = init_faraday(strata_url, logger, cache)
+      SearchiskoOptions = Struct.new(:dcp_base_url, :cache, :log_faraday, :searchisko_warnings)
+
+      def search_then_index strata_url, search_opts = {}, searchisko_opts = {}, logger = ::Logger.new('_tmp/faraday.log', 'daily'), cache = ::Aweplug::Cache::FileCache.new
+        faraday = Aweplug::Helpers::FaradayHelper.default(strata_url, logger, cache) 
+        faraday.basic_auth ENV['strata_username'], ENV['strata_password']
 
         response = faraday.get URI.escape('/rs/search'), search_opts, {Accept: 'application/json'}
-        results = JSON.load response.body
+        binding.pry
+        if response.success?
+          results = JSON.load response.body
 
-        # loop through each, GET uri, build searchisko hash off that, send to searchisko 
-        results["search_result"].each do |result|
-          searchisko = Aweplug::Helpers::Searchisko.new({:base_url => searchisko_opts[:dcp_base_url], 
-                                                         :authenticate => true, 
-                                                         :searchisko_username => ENV['dcp_user'], 
-                                                         :searchisko_password => ENV['dcp_password'], 
-                                                         :cache => searchisko_opts[:cache],
-                                                         :logger => searchisko_opts[:logger],
-                                                         :searchisko_warnings => searchisko_opts[:searchisko_warnings]})
-          begin
+          # loop through each, GET uri, build searchisko hash off that, send to searchisko 
+          results["search_result"].each do |result|
+            searchisko = Aweplug::Helpers::Searchisko.default(SearchiskoOptions.new(searchisko_opts[:dcp_base_url], cache, logger, searchisko_opts[:searchisko_warnings]))
+
             node = JSON.load faraday.get(result['uri'].split(strata_url).last, {}, {Accept: 'application/json'}).body
 
             searchisko_hash = {
-                sys_updated: DateTime.now,
-                sys_content_provider: 'rht',
-                sys_title: node['title'],
-                sys_project: value_or_default(node['products'], 'product', nil),
-                sys_project_name: value_or_default(node['products'], 'product', nil), 
-                sys_url_view: node['view_uri'],
-                product: node['product'],
-                tags: value_or_default(node['tags'], 'tag', []),
-                sys_tags: value_or_default(node['tags'], 'tag', [])
+              sys_updated: DateTime.now,
+              sys_content_provider: 'rht',
+              sys_title: node['title'],
+              sys_project: node['products'].nil? ? nil : node['products']['product'],
+              sys_project_name: node['products'].nil? ? nil : node['products']['product'],
+              sys_url_view: node['view_uri'],
+              product: node['product'],
+              tags: node['tags'].nil? ? [] : node['tags']['tag'],
+              sys_tags: node['tags'].nil? ? [] : node['tags']['tag']
             }
             if (result.key? "solution")
               searchisko_hash.merge!({
                 sys_content_type: 'rht_knowledgebase_solution',
-                sys_activity_dates: value_or_default(node, 'lastModifiedDate', [DateTime.now]),
-                sys_last_activity_date: value_or_default(node, 'lastModifiedDate', DateTime.now),
+                sys_activity_dates: node['lastModifiedDate'] || [DateTime.now],
+                sys_last_activity_date: node['lastModifiedDate'] || [DateTime.now],
                 sys_created: node['createdDate'],
-                sys_description: value_or_default(node['issue'], 'text', '')[0..400],
-                sys_content: value_or_default(node['resolution'], 'html', ''),
+                sys_description: node['issue'].nil? ? '' : node['issue']['text'][0..400],
+                sys_content: node['resolution'].nil? ? '' : node['resolution']['html'],
                 "sys_content_content-type" => 'text/html',
-                sys_content_plaintext: value_or_default(node['resolution'], 'text', ''),
+                sys_content_plaintext: node['resolution'].nil? ? '' : 'text'
               })
               searchisko.push_content 'solution', node['id'], searchisko_hash
             end
@@ -58,52 +56,19 @@ module Aweplug
               searchisko_hash.merge!({
                 sys_type: 'article',
                 sys_content_type: 'rht_knowledgebase_article',
-                sys_description: value_or_default(node['issue'], 'text', '')[0..400],
-                issue: value_or_default(node['issue'],'text', ''),
-                environment: value_or_default(node['environment'],'text', ''),
-                resolution: value_or_default(node['resolution'],'text', ''),
-                root_cause: value_or_default(node['root_cause'],'text', '')
+                sys_description: node['issue'].nil? ? '' : node['issue']['text'][0..400],
+                issue: node['issue'].nil? ? '' : node['issue']['text'],
+                environment: node['environment'].nil? ? '' : node['environment']['text'],
+                resolution: node['resolution'].nil? ? '' : node['resolution']['text'],
+                root_cause: node['root_cause'].nil? ? '' : node['root_cause']['text']
               })
               searchisko.push_content 'article', node['id'], searchisko_hash
             end
-          rescue Exception => e
-            puts "#{e}"
-            puts e.backtrace
           end
         end
       end
 
-      protected
-
-      private
-
-      def value_or_default(container, key, default)
-        begin
-          container[key]
-        rescue
-          default
-        end
-      end
-
-      def init_faraday strata_url, logger = nil, cache = nil
-        cache = Aweplug::Cache::FileCache.new if cache.nil?
-        conn = Faraday.new(url: strata_url) do |builder|
-          if (logger) 
-            if (logger.is_a?(::Logger))
-              builder.response :logger, @logger = logger
-            else 
-              builder.response :logger, @logger = ::Logger.new('_tmp/faraday.log', 'daily')
-            end
-          end
-          builder.use FaradayMiddleware::Caching, cache, {}
-          builder.adapter :net_http
-          builder.options.params_encoder = Faraday::FlatParamsEncoder
-          builder.ssl.verify = false
-        end
-
-        conn.basic_auth ENV['strata_username'], ENV['strata_password']
-        conn
-      end
+      private 
       
     end
   end
