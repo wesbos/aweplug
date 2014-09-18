@@ -7,21 +7,22 @@ module Aweplug
   module Transformer
     # Public: Look for images from asciidoc files and 'cdn-ify' them.
     class AsciidocCdnTransformer 
-      def transform(site, page, input)
+      def transform(site, page, content)
         if (!site.cdn_http_base.nil? && (is_asciidoc? page) && page.output_extension == '.html') 
           resource = ::Aweplug::Helpers::Resources::SingleResource.new site.dir, site.cdn_http_base, site.cdn_out_dir, site.minify, site.version 
 
-          doc = Nokogiri::HTML(input)
+          doc = Nokogiri::HTML(content)
+          altered = false
           doc.css('img').each do |img|
             src = img['src'] 
             unless src.start_with? site.cdn_http_base
               img['src'] = resource.path(src)
+              altered = true
             end
           end
-          doc.to_html
-        else
-          input
-        end 
+          content = doc.to_html if altered
+        end
+        content
       end
 
       private
