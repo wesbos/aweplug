@@ -44,7 +44,7 @@ module Aweplug
       def initialize site, push_to_searchisko
         @site = site
         @push_to_searchisko = push_to_searchisko
-        @client = google_client(site, authenticate: false)
+        @client = google_client(site, authenticate: site.authenticate_google_books_api)
         @books = @client.discovered_api(BOOKS_API_SERVICE_NAME, BOOKS_API_VERSION)
         @searchisko = Aweplug::Helpers::Searchisko.default site
       end
