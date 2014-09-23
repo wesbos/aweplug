@@ -4,6 +4,7 @@ require 'date'
 require 'aweplug/helpers/searchisko'
 require 'aweplug/helpers/faraday'
 require 'aweplug/cache/file_cache'
+require 'aweplug/cache/jdg_cache'
 require 'parallel'
 
 module Aweplug
@@ -13,8 +14,8 @@ module Aweplug
 
       SearchiskoOptions = Struct.new(:dcp_base_url, :cache, :log_faraday, :searchisko_warnings)
 
-      def search_then_index strata_url, search_opts = {}, searchisko_opts = {}, logger = ::Logger.new('_tmp/faraday.log', 'daily'), cache = ::Aweplug::Cache::FileCache.new
-        faraday = Aweplug::Helpers::FaradayHelper.default(strata_url, logger, cache) 
+      def search_then_index strata_url, cache, search_opts = {}, searchisko_opts = {}, logger = ::Logger.new('_tmp/faraday.log', 'daily')
+        faraday = Aweplug::Helpers::FaradayHelper.default(strata_url, {logger: logger, cache: cache}) 
         faraday.basic_auth ENV['strata_username'], ENV['strata_password']
 
         response = faraday.get URI.escape('/rs/search'), search_opts, {Accept: 'application/json'}

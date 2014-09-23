@@ -11,6 +11,7 @@ require 'json'
 require 'parallel'
 require 'pry'
 require 'aweplug/cache/file_cache'
+require 'aweplug/cache/jdg_cache'
 
 module Aweplug
   module Extensions
@@ -75,8 +76,14 @@ module Aweplug
         #
         # Returns nothing.
         def execute site
-          if site.cache.nil?
-            site.send('cache=', Aweplug::Cache::FileCache.new)
+          if (site.cache.nil?)
+            if (site.profile =~ /development/)
+              cache = Aweplug::Cache::FileCache.new 
+            else
+              cache = Aweplug::Cache::JDGCache.new(ENV['cache_url'], ENV['cache_user'], ENV['cache_password'])
+            end
+
+            site.send('cache=', cache)
           end
           Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 40) do |file|
             searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 

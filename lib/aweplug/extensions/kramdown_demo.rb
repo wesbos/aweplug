@@ -16,6 +16,7 @@ require 'base64'
 require 'nokogiri'
 require 'aweplug/helpers/searchisko_social'
 require 'aweplug/cache/file_cache'
+require 'aweplug/cache/jdg_cache'
 
 
 
@@ -162,8 +163,14 @@ module Aweplug
         end
 
         def init_faraday site
-          if site.cache.nil?
-            site.send('cache=', Aweplug::Cache::FileCache.new)
+          if (site.cache.nil?)
+            if (site.profile =~ /development/)
+              cache = Aweplug::Cache::FileCache.new 
+            else
+              cache = Aweplug::Cache::JDGCache.new(ENV['cache_url'], ENV['cache_user'], ENV['cache_password'])
+            end
+
+            site.send('cache=', cache)
           end
           @faraday ||= Faraday.new do |builder|
             if (site.log_faraday.is_a?(::Logger))

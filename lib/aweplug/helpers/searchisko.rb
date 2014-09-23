@@ -1,12 +1,13 @@
 require 'faraday'
 require 'faraday_middleware' 
-require 'aweplug/cache/yaml_file_cache'
+require 'aweplug/cache/file_cache'
+require 'aweplug/cache/jdg_cache'
 require 'logger'
 require 'json'
 require 'uri'
 
 # WARNING: monkey patching faraday
-# TODO: See if we can the new refinements to work
+# TODO: See if we can get the new refinements to work
 module Faraday
   module Utils
     def build_nested_query(value, prefix = nil)

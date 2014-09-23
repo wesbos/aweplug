@@ -1,6 +1,8 @@
 require 'nokogiri'
 require 'aweplug/helpers/cdn'
 require 'aweplug/helpers/png'
+require 'aweplug/cache/file_cache'
+require 'aweplug/cache/jdg_cache'
 require 'net/http'
 require 'sass'
 require 'tempfile'
@@ -75,7 +77,12 @@ module Aweplug
           @site = site
         end
 
-        @@cache = {}
+
+        if (site.profile =~ /development/)
+          @@cache = Aweplug::Cache::FileCache.new 
+        else
+          @@cache = Aweplug::Cache::JDGCache.new(ENV['cache_url'], ENV['cache_user'], ENV['cache_password'])
+        end
 
         def resources(id, src)
           if @site.cdn_http_base
