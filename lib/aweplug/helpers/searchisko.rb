@@ -1,7 +1,6 @@
 require 'faraday'
 require 'faraday_middleware' 
-require 'aweplug/cache/file_cache'
-require 'aweplug/cache/jdg_cache'
+require 'aweplug/cache'
 require 'logger'
 require 'json'
 require 'uri'
@@ -34,6 +33,8 @@ module Aweplug
     class Searchisko 
 
       def self.default site
+        Aweplug::Cache.default site
+
         Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                           :authenticate => true, 
                                           :searchisko_username => ENV['dcp_user'], 

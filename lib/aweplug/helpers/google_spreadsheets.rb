@@ -4,8 +4,7 @@ require 'pathname'
 require 'faraday'
 require 'faraday_middleware' 
 require 'logger'
-require 'aweplug/cache/file_cache'
-require 'aweplug/cache/jdg_cache'
+require 'aweplug/cache'
 
 module Aweplug
   module Helpers
@@ -108,15 +107,8 @@ module Aweplug
         @site = site
         @authenticate = authenticate
 
-        if (site.cache.nil?)
-          if (site.profile =~ /development/)
-            cache = Aweplug::Cache::FileCache.new 
-          else
-            cache = Aweplug::Cache::JDGCache.new(ENV['cache_url'], ENV['cache_user'], ENV['cache_password'])
-          end
+        Aweplug::Cache.default site
 
-          site.send('cache=', cache) if site.cache.nil?
-        end
         @faraday = Faraday.new(:url => BASE_URL) do |builder|
           if authenticate
             oauth2_client = client_signet

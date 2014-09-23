@@ -3,8 +3,7 @@ require 'json'
 require 'date'
 require 'aweplug/helpers/searchisko'
 require 'aweplug/helpers/faraday'
-require 'aweplug/cache/file_cache'
-require 'aweplug/cache/jdg_cache'
+require 'aweplug/cache'
 require 'parallel'
 
 module Aweplug
