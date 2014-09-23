@@ -1,4 +1,3 @@
-require 'aweplug/cache/yaml_file_cache'
 require 'aweplug/helpers/video/vimeo'
 require 'aweplug/helpers/video/youtube'
 require 'aweplug/helpers/video/helpers'

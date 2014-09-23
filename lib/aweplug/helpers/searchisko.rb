@@ -1,12 +1,12 @@
 require 'faraday'
 require 'faraday_middleware' 
-require 'aweplug/cache/yaml_file_cache'
+require 'aweplug/cache'
 require 'logger'
 require 'json'
 require 'uri'
 
 # WARNING: monkey patching faraday
-# TODO: See if we can the new refinements to work
+# TODO: See if we can get the new refinements to work
 module Faraday
   module Utils
     def build_nested_query(value, prefix = nil)
@@ -33,6 +33,8 @@ module Aweplug
     class Searchisko 
 
       def self.default site
+        Aweplug::Cache.default site
+
         Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                           :authenticate => true, 
                                           :searchisko_username => ENV['dcp_user'], 

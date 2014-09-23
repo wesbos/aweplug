@@ -4,7 +4,7 @@ require 'pathname'
 require 'faraday'
 require 'faraday_middleware' 
 require 'logger'
-require 'aweplug/cache/file_cache'
+require 'aweplug/cache'
 
 module Aweplug
   module Helpers
@@ -106,7 +106,9 @@ module Aweplug
       def initialize site: , authenticate: false, logger: true, raise_error: false, adapter: nil
         @site = site
         @authenticate = authenticate
-        site.send('cache=', Aweplug::Cache::FileCache.new) if site.cache.nil?
+
+        Aweplug::Cache.default site
+
         @faraday = Faraday.new(:url => BASE_URL) do |builder|
           if authenticate
             oauth2_client = client_signet

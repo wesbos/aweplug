@@ -1,4 +1,4 @@
-require 'aweplug/cache/file_cache'
+require 'aweplug/cache'
 
 module Aweplug
   module Helpers
@@ -6,8 +6,8 @@ module Aweplug
       class VideoBase
 
         def initialize(video, site)
+          Aweplug::Cache.default site
           @site = site
-          site.send('cache=', Aweplug::Cache::FileCache.new) if site.cache.nil?
           @video = video
           @searchisko = Aweplug::Helpers::Searchisko.new({:base_url => @site.dcp_base_url, 
                                                           :authenticate => true, 

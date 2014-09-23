@@ -1,5 +1,5 @@
 require 'oauth'
-require 'aweplug/cache/file_cache'
+require 'aweplug/cache'
 require 'aweplug/helpers/video/vimeo_video'
 require 'aweplug/helpers/searchisko_social'
 require 'aweplug/helpers/video/helpers'
@@ -19,7 +19,9 @@ module Aweplug
 
         def initialize site, logger: true, raise_error: false, adapter: nil
           @site = site
-          site.send('cache=', Aweplug::Cache::FileCache.new) if site.cache.nil?
+
+          Aweplug::Cache.default @site
+
           @faraday = Faraday.new(:url => BASE_URL) do |builder|
             if (logger) 
               if (logger.is_a?(::Logger))
@@ -33,7 +35,7 @@ module Aweplug
             builder.response :gzip
             builder.request :authorization, 'bearer', ENV['vimeo_access_token']
             builder.use FaradayMiddleware::FollowRedirects
-            builder.use FaradayMiddleware::Caching, site.cache, {}
+            builder.use FaradayMiddleware::Caching, @site.cache, {}
             builder.adapter adapter || :net_http
           end
         end
