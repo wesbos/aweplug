@@ -1,6 +1,7 @@
 require 'nokogiri'
 require 'aweplug/helpers/cdn'
 require 'aweplug/helpers/png'
+require 'aweplug/cache'
 require 'net/http'
 require 'sass'
 require 'tempfile'
@@ -75,7 +76,7 @@ module Aweplug
           @site = site
         end
 
-        @@cache = {}
+        @@cache = Aweplug::Cache.default site
 
         def resources(id, src)
           if @site.cdn_http_base
