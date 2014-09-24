@@ -1,5 +1,5 @@
 require 'aweplug/helpers/faraday'
-require 'uri'
+require 'digest/sha1'
 
 module Aweplug
   module Cache
@@ -46,15 +46,12 @@ module Aweplug
       #
       # Returns the data associated with the key.
       def read(key)
-        raise "key must be a string" unless key.is_a? String
-        _key = key.freeze 
+        _key = Digest::SHA1.hexdigest key
 
         unless @memory_store.has_key? _key
-          response = @conn.get URI.escape("/rest/jbossdeveloper/#{_key}")
+          response = @conn.get "/rest/jbossdeveloper/#{_key}"
           if response.success?
             @memory_store[_key] = Marshal.load(response.body)
-          else 
-            $LOG.error "#{key} not found in jdg or memory"
           end
         end
         @memory_store[_key]
@@ -72,18 +69,18 @@ module Aweplug
       #
       # Returns the data just saved.
       def write(key, value, opts = {})
-        raise "key must be a string" unless key.is_a? String
-        _key = key.freeze 
+        _key = Digest::SHA1.hexdigest key
         ttl = opts[:ttl] || 86400
 
-        if key.is_a? Faraday::Response
-          resp_ttl = DateTime.parse(resp.headers['expires']).to_time.to_i - Time.now.to_i
+        if (value.is_a?(Faraday::Response) && !value.headers['expires'].nil?)
+          resp_ttl = DateTime.parse(value.headers['expires']).to_time.to_i - Time.now.to_i
           ttl = resp_ttl if resp_ttl > 0
         end
 
         _value = Marshal.dump value
 
-        @memory_store[_key] = _value
+        @memory_store[_key] = value
+        $LOG.debug "Writing to JDG cache hashed #{_key} for #{key}"
         @conn.put do |req|
           req.url "/rest/jbossdeveloper/#{_key}"
           req.headers['Content-Type'] = opts[:content_type] || 'application/ruby+object'
@@ -107,10 +104,10 @@ module Aweplug
       #
       # Returns the value in the cache, or the default supplied from the block.
       def fetch(key) 
-        raise "key must be a string" unless key.is_a? String
-        _key = key.freeze 
-
-        read(key) || yield.tap { |data| write(key, data) }
+        read(key) || yield.tap do |data| 
+          write(key, data) 
+          data
+        end
       end
     end
   end

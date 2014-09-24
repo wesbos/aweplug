@@ -9,7 +9,7 @@ module Aweplug
     #
     # Returns the cache for the profile.
     def self.default site
-      if (site.cache.nil?)
+      if (site.send('cache').nil? || !site.respond_to?('cache'))
         if (site.profile =~ /development/)
           cache = Aweplug::Cache::FileCache.new 
         else
@@ -17,8 +17,8 @@ module Aweplug
         end
 
         site.send('cache=', cache)
-        cache
       end
+      site.cache
     end
   end
 end

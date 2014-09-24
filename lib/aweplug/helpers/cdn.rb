@@ -1,5 +1,5 @@
 require 'digest'
-require 'yaml'
+require 'yaml/store'
 
 module Aweplug
   module Helpers
