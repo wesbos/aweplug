@@ -10,6 +10,7 @@ module Aweplug
     class JDGCache
       # Public: Initialization method.
       #
+      # profile  - profile the site is built with to prepend to keys.
       # uri      - String or URI containing the JDG URI (required).
       # username - Username for the JDG instance (required).
       # password - Password for the JDG instance (required).
@@ -29,7 +30,8 @@ module Aweplug
       #   # => 'data'
       #
       # Returns a new instance of the cache.
-      def initialize(uri, username, password)
+      def initialize(profile, uri, username, password)
+        @profile = profile
         @memory_store = {}
         @conn = Aweplug::Helpers::FaradayHelper.default(uri, {:no_cache => true})
         @conn.basic_auth username, password
@@ -49,7 +51,7 @@ module Aweplug
         _key = Digest::SHA1.hexdigest key
 
         unless @memory_store.has_key? _key
-          response = @conn.get "/rest/jbossdeveloper/#{_key}"
+          response = @conn.get "/rest/jbossdeveloper/#{@profile}_#{_key}"
           if response.success?
             @memory_store[_key] = Marshal.load(response.body)
           end
@@ -82,7 +84,7 @@ module Aweplug
         @memory_store[_key] = value
         $LOG.debug "Writing to JDG cache hashed #{_key} for #{key}"
         @conn.put do |req|
-          req.url "/rest/jbossdeveloper/#{_key}"
+          req.url "/rest/jbossdeveloper/#{@profile}_#{_key}"
           req.headers['Content-Type'] = opts[:content_type] || 'application/ruby+object'
           req.headers['timeToLive'] = ttl.to_s # need to see if we're actually a request and full from that
           req.body = _value

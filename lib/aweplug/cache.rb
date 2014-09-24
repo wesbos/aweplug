@@ -13,7 +13,7 @@ module Aweplug
         if (site.profile =~ /development/)
           cache = Aweplug::Cache::FileCache.new 
         else
-          cache = Aweplug::Cache::JDGCache.new(ENV['cache_url'], ENV['cache_user'], ENV['cache_password'])
+          cache = Aweplug::Cache::JDGCache.new(site.profile, ENV['cache_url'], ENV['cache_user'], ENV['cache_password'])
         end
 
         site.send('cache=', cache)
