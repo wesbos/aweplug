@@ -13,7 +13,7 @@ module Aweplug
         include Aweplug::Helpers::Video::Helpers
         include Aweplug::GoogleAPIs
 
-        YOUTUBE_URL_PATTERN = /^https?:\/\/(www\.)?youtube\.com\/(watch|playlist)\?(list=|v=)(\w*)$/
+        YOUTUBE_URL_PATTERN = /^https?:\/\/(www\.)?youtube\.com\/(watch|playlist)\?(list=|v=)([\w-]*)$/
 
         # This OAuth 2.0 access scope allows for full read/write access to the
         # authenticated user's account.
