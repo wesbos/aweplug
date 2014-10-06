@@ -32,14 +32,14 @@ module Aweplug
     # Public: A helper class for using Searchisko.
     class Searchisko 
 
-      def self.default site
-        Aweplug::Cache.default site
+      def self.default site, cache_ttl
+        cache = Aweplug::Cache.default site, cache_ttl
 
         Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                           :authenticate => true, 
                                           :searchisko_username => ENV['dcp_user'], 
                                           :searchisko_password => ENV['dcp_password'], 
-                                          :cache => site.cache,
+                                          :cache => cache,
                                           :logger => site.log_faraday,
                                           :searchisko_warnings => site.searchisko_warnings})
       end

@@ -17,10 +17,10 @@ module Aweplug
         VIMEO_URL_PATTERN = /^https?:\/\/vimeo\.com\/(album)?\/?([0-9]+)\/?$/
         BASE_URL = 'https://api.vimeo.com/'
 
-        def initialize site, logger: true, raise_error: false, adapter: nil
+        def initialize site, logger: true, raise_error: false, adapter: nil, default_ttl: 86400 # day default seems good
           @site = site
 
-          Aweplug::Cache.default @site
+          cache = Aweplug::Cache.default @site, default_ttl
 
           @faraday = Faraday.new(:url => BASE_URL) do |builder|
             if (logger) 
@@ -35,7 +35,7 @@ module Aweplug
             builder.response :gzip
             builder.request :authorization, 'bearer', ENV['vimeo_access_token']
             builder.use FaradayMiddleware::FollowRedirects
-            builder.use FaradayMiddleware::Caching, @site.cache, {}
+            builder.use FaradayMiddleware::Caching, cache, {}
             builder.adapter adapter || :net_http
           end
         end
