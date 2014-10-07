@@ -9,7 +9,7 @@ module Aweplug
     # default_ttl - Time in seconds for the default ttl for the cache
     #
     # Returns the cache for the profile.
-    def self.default site, default_ttl: 360 
+    def self.default site, default_ttl = 360 
       if (site.profile =~ /development/)
         cache = Aweplug::Cache::FileCache.new 
       else

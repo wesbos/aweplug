@@ -78,8 +78,8 @@ module Aweplug
         #
         # Returns nothing.
         def execute site
-          farday = init_faraday(site)
           @cache = Aweplug::Cache.default site # default cache here shouldn't matter.
+          farday = init_faraday(site)
 
           ids = []
           if @url.start_with? 'http'
