@@ -1,7 +1,6 @@
 require 'nokogiri'
 require 'aweplug/helpers/cdn'
 require 'aweplug/helpers/png'
-require 'aweplug/cache'
 require 'net/http'
 require 'sass'
 require 'tempfile'
@@ -74,16 +73,16 @@ module Aweplug
 
         def initialize(site)
           @site = site
-          @@cache ||= Aweplug::Cache.default @site
+          @@cache = {}
         end 
 
         def resources(id, src)
           if @site.cdn_http_base
-            if @@cache.read(src)
-              @@cache.read(src)
+            if @@cache.key? src
+              @@cache[src]
             else
               content = ""
-              @@cache.write(src, "")
+              @@cache[src] = ""
               items(src).each do |i|
                 if i =~ Resources::local_path_pattern(@site.base_url)
                   content << local_content($1)
@@ -94,7 +93,7 @@ module Aweplug
               if !content.empty?
                 file_ext = ext
                 cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @site.cdn_out_dir, @site.cdn_version).add(id, file_ext, Content.new(content, @site.minify, file_ext))
-                @@cache.write(src, tag("#{@site.cdn_http_base}/#{cdn_file_path}"))
+                @@cache[src] << tag("#{@site.cdn_http_base}/#{cdn_file_path}")
               end
             end
           else
