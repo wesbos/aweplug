@@ -79,7 +79,7 @@ module Aweplug
         # Returns nothing.
         def execute site
           farday = init_faraday(site)
-          Aweplug::Cache.default site
+          @cache = Aweplug::Cache.default site # default cache here shouldn't matter.
 
           ids = []
           if @url.start_with? 'http'
@@ -135,7 +135,7 @@ module Aweplug
                                                           :authenticate => true, 
                                                           :searchisko_username => ENV['dcp_user'], 
                                                           :searchisko_password => ENV['dcp_password'], 
-                                                          :cache => site.cache,
+                                                          :cache => @cache,
                                                           :logger => site.log_faraday,
                                                           :searchisko_warnings => site.searchisko_warnings})
 
@@ -164,7 +164,6 @@ module Aweplug
         end
 
         def init_faraday site
-          Aweplug::Cache.default site
           @faraday ||= Faraday.new do |builder|
             if (site.log_faraday.is_a?(::Logger))
               builder.response :logger, @logger = site.log_faraday
@@ -173,7 +172,7 @@ module Aweplug
             end
             builder.request :url_encoded
             builder.request :retry
-            builder.use FaradayMiddleware::Caching, site.cache, {}
+            builder.use FaradayMiddleware::Caching, @cache, {}
             builder.use FaradayMiddleware::FollowRedirects, limit: 3
             builder.adapter Faraday.default_adapter 
           end

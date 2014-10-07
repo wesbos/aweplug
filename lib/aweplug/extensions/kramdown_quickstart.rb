@@ -75,14 +75,14 @@ module Aweplug
         #
         # Returns nothing.
         def execute site
-          Aweplug::Cache.default site
+          cache = Aweplug::Cache.default site # default cache shouldn't matter here
 
           Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 40) do |file|
             searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                                            :authenticate => true, 
                                                            :searchisko_username => ENV['dcp_user'], 
                                                            :searchisko_password => ENV['dcp_password'], 
-                                                           :cache => site.cache,
+                                                           :cache => cache,
                                                            :logger => site.log_faraday,
                                                            :searchisko_warnings => site.searchisko_warnings})
             next if @excludes.include?(File.dirname(file))

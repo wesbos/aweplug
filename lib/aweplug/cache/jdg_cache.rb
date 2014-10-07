@@ -10,10 +10,12 @@ module Aweplug
     class JDGCache
       # Public: Initialization method.
       #
-      # profile  - profile the site is built with to prepend to keys.
-      # uri      - String or URI containing the JDG URI (required).
-      # username - Username for the JDG instance (required).
-      # password - Password for the JDG instance (required).
+      # profile     - profile the site is built with to prepend to keys.
+      # uri         - String or URI containing the JDG URI (required).
+      # username    - Username for the JDG instance (required).
+      # password    - Password for the JDG instance (required).
+      # default_ttl - Seconds (Integer) for the default ttl for items in 
+      #               the cache, defaults to nil.
       #
       # Examples
       #
@@ -30,11 +32,12 @@ module Aweplug
       #   # => 'data'
       #
       # Returns a new instance of the cache.
-      def initialize(profile, uri, username, password)
+      def initialize(profile, uri, username, password, default_ttl = nil)
         @profile = profile
         @memory_store = {}
         @conn = Aweplug::Helpers::FaradayHelper.default(uri, {:no_cache => true})
         @conn.basic_auth username, password
+        @default_ttl = default_ttl
       end
 
       # Public: Retrieves the data stored previously under the given key.
@@ -72,7 +75,7 @@ module Aweplug
       # Returns the data just saved.
       def write(key, value, opts = {})
         _key = Digest::SHA1.hexdigest key
-        ttl = opts[:ttl] || 86400
+        ttl = opts[:ttl] || @default_ttl
 
         if (value.is_a?(Faraday::Response) && !value.headers['expires'].nil?)
           resp_ttl = DateTime.parse(value.headers['expires']).to_time.to_i - Time.now.to_i
