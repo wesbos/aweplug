@@ -71,9 +71,10 @@ module Aweplug
 
       class Resource
 
+        @@cache = {}
+
         def initialize(site)
           @site = site
-          @@cache = {}
         end 
 
         def resources(id, src)
