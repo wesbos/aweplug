@@ -69,6 +69,7 @@ module Aweplug
           @site_variable = opts[:site_variable] || opts[:output_dir]
           @excludes = opts[:excludes] || []
           @push_to_searchisko = opts[:push_to_searchisko].nil? ? true : opts[:push_to_searchisko]
+          @normalize_contributors = opts.has_key?(:normalize_contributors) ? opts[:normalize_contributors]  : true
         end
 
         # Internal: Execute method required by awestruct. Called during the
@@ -145,13 +146,16 @@ module Aweplug
               send_to_searchisko(searchisko, metadata, page, site, metadata[:converted])
             end
             
-            unless metadata[:author].nil?
+            if @normalize_contributors
+              unless metadata[:author].nil? 
                 metadata[:author] = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', metadata[:author], searchisko
+              end
+
+              metadata[:contributors].collect! do |contributor|
+                contributor = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', contributor, searchisko
+              end
             end
 
-            metadata[:contributors].collect! do |contributor|
-              contributor = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', contributor, searchisko
-            end
             metadata[:contributors].delete(metadata[:author])
 
             page.send 'metadata=', metadata
