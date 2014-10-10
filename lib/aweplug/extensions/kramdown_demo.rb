@@ -36,6 +36,7 @@ module Aweplug
 
         GITHUB_REPO = /^https?:\/\/(www\.)?github\.com\/([^\/]*)\/([^\/]*)\/?$/
         GITHUB_RELEASE = /^https?:\/\/(www\.)?github\.com\/([^\/]*)\/([^\/]*)\/(releases\/tag|archive)\/(.*?)(\.zip|\.tar\.gz)?$/
+        GITHUB_YAML = /^https?:\/\/(www\.)?github\.com\/(.*\.yaml)?$/
         # Public: Initialization method, used in the awestruct pipeline.
         #
         # opts - A Hash of options, some being required, some not (default: {}). 
@@ -69,6 +70,7 @@ module Aweplug
           @site_variable = opts[:site_variable] || opts[:output_dir]
           @excludes = opts[:excludes] || []
           @push_to_searchisko = opts[:push_to_searchisko].nil? ? true : opts[:push_to_searchisko]
+          @normalize_contributors = opts.has_key?(:normalize_contributors) ? opts[:normalize_contributors]  : true
         end
 
         # Internal: Execute method required by awestruct. Called during the
@@ -102,6 +104,8 @@ module Aweplug
           # Load the demo definition
           if url =~ GITHUB_REPO
             metadata = from_github({:github_org => $2, :github_repo => $3})
+          elsif url =~ GITHUB_YAML
+            metadata = from_yaml("https://raw.githubusercontent.com/#{$2}".gsub('/blob', ''))
           else
             # We load the definition from the YAML file specified
             metadata = from_yaml(url)
@@ -145,13 +149,16 @@ module Aweplug
               send_to_searchisko(searchisko, metadata, page, site, metadata[:converted])
             end
             
-            unless metadata[:author].nil?
+            if @normalize_contributors
+              unless metadata[:author].nil? 
                 metadata[:author] = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', metadata[:author], searchisko
+              end
+
+              metadata[:contributors].collect! do |contributor|
+                contributor = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', contributor, searchisko
+              end
             end
 
-            metadata[:contributors].collect! do |contributor|
-              contributor = normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', contributor, searchisko
-            end
             metadata[:contributors].delete(metadata[:author])
 
             page.send 'metadata=', metadata
