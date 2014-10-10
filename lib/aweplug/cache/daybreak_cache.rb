@@ -14,7 +14,7 @@ module Aweplug
       #
       # Examples
       #
-      #   store = Aweplug::Cache::FileCache.new
+      #   store = Aweplug::Cache::DaybreakCache.new
       #   store.write('key', 'data')
       #   # => 'data'
       #   store.read('key')
@@ -39,7 +39,6 @@ module Aweplug
       # Returns the data associated with the key.
       def read(key)
         key.freeze if key.is_a? String
-        @daybreak.load
         @daybreak[key]
       end
 
@@ -62,6 +61,7 @@ module Aweplug
             @daybreak.update!({key => value}) 
           else
             @daybreak[key] = value
+            @daybreak.flush
           end
         end
       end
@@ -85,7 +85,6 @@ module Aweplug
 
         read(key) || yield.tap { |data| write(key, data) }
       end
-
     end
   end
 end
