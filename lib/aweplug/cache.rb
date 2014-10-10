@@ -1,5 +1,6 @@
 require 'aweplug/cache/file_cache'
 require 'aweplug/cache/jdg_cache'
+require 'aweplug/cache/daybreak_cache'
 
 module Aweplug
   module Cache
@@ -11,10 +12,12 @@ module Aweplug
     # Returns the cache for the profile.
     def self.default site, default_ttl = 360 
       if (site.profile =~ /development/)
-        cache = Aweplug::Cache::FileCache.new 
+        @@cache ||= Aweplug::Cache::DaybreakCache.new 
       else
-        cache = Aweplug::Cache::JDGCache.new(site.profile, ENV['cache_url'], ENV['cache_user'], ENV['cache_password'], default_ttl)
+        @@cache ||= Aweplug::Cache::JDGCache.new(site.profile, ENV['cache_url'], ENV['cache_user'], ENV['cache_password'], default_ttl)
       end
+      @@cache
     end
   end
 end
+

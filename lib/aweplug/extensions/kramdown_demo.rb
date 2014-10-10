@@ -4,7 +4,6 @@ require 'json'
 require 'kramdown'
 require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
-require 'parallel'
 require 'yaml'
 require 'aweplug/handlers/synthetic_handler'
 require 'awestruct/page'
@@ -81,7 +80,7 @@ module Aweplug
         # Returns nothing.
         def execute site
           @cache = Aweplug::Cache.default site # default cache here shouldn't matter.
-          farday = init_faraday(site)
+          init_faraday(site)
 
           ids = []
           if @url.start_with? 'http'
@@ -90,7 +89,7 @@ module Aweplug
             demos = YAML.load(File.open(@url))
           end
           if demos
-            Parallel.each(demos, in_threads: 40) do |url|
+            demos.each do |url|
               next if @excludes.include?(url)
               build(url, site, ids)
             end

@@ -8,7 +8,6 @@ require 'aweplug/helpers/kramdown_metadata'
 require 'aweplug/helpers/searchisko'
 require 'aweplug/helpers/searchisko_social'
 require 'json'
-require 'parallel'
 require 'pry'
 require 'aweplug/cache'
 
@@ -77,7 +76,7 @@ module Aweplug
         def execute site
           cache = Aweplug::Cache.default site # default cache shouldn't matter here
 
-          Parallel.each(Dir["#{@repo}/*/README.md"], in_threads: 40) do |file|
+          Dir["#{@repo}/*/README.md"].each do |file|
             searchisko = Aweplug::Helpers::Searchisko.new({:base_url => site.dcp_base_url, 
                                                            :authenticate => true, 
                                                            :searchisko_username => ENV['dcp_user'], 

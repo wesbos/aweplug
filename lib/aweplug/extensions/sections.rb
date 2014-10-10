@@ -1,6 +1,5 @@
 require 'asciidoctor'
 require 'awestruct/handlers/interpolation_handler'
-require 'parallel'
 
 module Aweplug
   module Extensions
@@ -16,8 +15,7 @@ module Aweplug
       #
       # site - The awestruct site variable
       def execute site 
-        start_time = DateTime.now
-        Parallel.each(site.pages, in_threads: 20) do |page|
+        site.pages.each do |page|
           if page.content_syntax =~ /^a(sc)?(ii)?(d(oc)?)?$/
             sections = Asciidoctor.load(interpolated_content(page), {sectanchors: ''}).sections
             sections.each do |s|

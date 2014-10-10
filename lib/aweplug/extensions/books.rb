@@ -1,4 +1,3 @@
-require 'parallel'
 require 'aweplug/books/google_books'
 
 module Aweplug
@@ -25,7 +24,7 @@ module Aweplug
         gbooks = Aweplug::Books::GoogleBooks.new site, @push_to_searchisko
         books = []
         
-        Parallel.each(eval(@variable), in_threads: 40) do |isbn|
+        eval(@variable).each do |isbn|
           book = gbooks.get(isbn)
           unless book.nil?
             books << book
