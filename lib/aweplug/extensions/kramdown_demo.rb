@@ -36,6 +36,7 @@ module Aweplug
 
         GITHUB_REPO = /^https?:\/\/(www\.)?github\.com\/([^\/]*)\/([^\/]*)\/?$/
         GITHUB_RELEASE = /^https?:\/\/(www\.)?github\.com\/([^\/]*)\/([^\/]*)\/(releases\/tag|archive)\/(.*?)(\.zip|\.tar\.gz)?$/
+        GITHUB_YAML = /^https?:\/\/(www\.)?github\.com\/(.*\.yaml)?$/
         # Public: Initialization method, used in the awestruct pipeline.
         #
         # opts - A Hash of options, some being required, some not (default: {}). 
@@ -103,6 +104,8 @@ module Aweplug
           # Load the demo definition
           if url =~ GITHUB_REPO
             metadata = from_github({:github_org => $2, :github_repo => $3})
+          elsif url =~ GITHUB_YAML
+            metadata = from_yaml("https://raw.githubusercontent.com/#{$2}".gsub('/blob', ''))
           else
             # We load the definition from the YAML file specified
             metadata = from_yaml(url)
