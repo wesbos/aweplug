@@ -9,6 +9,7 @@ require 'aweplug/handlers/synthetic_handler'
 require 'awestruct/page'
 require 'awestruct/handlers/layout_handler'
 require 'awestruct/handlers/tilt_handler'
+require 'parallel'
 require 'faraday'
 require 'faraday_middleware' 
 require 'base64'
@@ -89,7 +90,7 @@ module Aweplug
             demos = YAML.load(File.open(@url))
           end
           if demos
-            demos.each do |url|
+            Parallel.each(demos, :in_threads => 10) do |url|
               next if @excludes.include?(url)
               build(url, site, ids)
             end

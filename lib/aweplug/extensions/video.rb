@@ -1,3 +1,4 @@
+require 'parallel'
 require 'aweplug/helpers/video'
 require 'json'
 
@@ -29,7 +30,7 @@ module Aweplug
       end
 
       def execute site 
-        eval(@variable).each do |u|
+        Parallel.each(eval(@variable), :in_threads => 10) do |u|
           add_video u, site, push_to_searchisko: @push_to_searchisko
         end
       end
