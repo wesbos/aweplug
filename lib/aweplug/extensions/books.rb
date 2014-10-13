@@ -25,7 +25,7 @@ module Aweplug
         gbooks = Aweplug::Books::GoogleBooks.new site, @push_to_searchisko
         books = []
         
-        Parallel.each(eval(@variable), :in_threads => 10) do |isbn|
+        Parallel.each(eval(@variable), :in_threads => (site.build_threads || 0)) do |isbn|
           book = gbooks.get(isbn)
           unless book.nil?
             books << book

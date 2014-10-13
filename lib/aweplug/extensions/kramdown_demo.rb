@@ -90,7 +90,7 @@ module Aweplug
             demos = YAML.load(File.open(@url))
           end
           if demos
-            Parallel.each(demos, :in_threads => 10) do |url|
+            Parallel.each(demos, :in_threads => (site.build_threads || 0)) do |url|
               next if @excludes.include?(url)
               build(url, site, ids)
             end
