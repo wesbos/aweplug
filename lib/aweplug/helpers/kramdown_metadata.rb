@@ -50,7 +50,7 @@ module Kramdown
         add_text(text, el)
         el.attr['id'] = id if id
         
-        @root.options[:metadata][:title] = text.split(':').last.strip
+        @root.options[:metadata][:title] = text.strip # Including all of the text per DEVELOPER-1033
         #@tree.children << el
         true
       end
