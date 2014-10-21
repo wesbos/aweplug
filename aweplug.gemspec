@@ -27,7 +27,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'oauth', '~> 0.3.6'
   #gem.add_dependency 'net-http-persistent', '~> 2.9.4'
   gem.add_dependency 'uglifier', '~> 2.0.1'
-  gem.add_dependency 'sass', '~> 3.2'
+  gem.add_dependency 'sass', '< 3.4.6'
   gem.add_dependency 'nokogiri', '~> 1.5.10'
   #gem.add_dependency 'rugged', '~> 0.19'
   gem.add_dependency 'parallel', '> 1.0.0'
