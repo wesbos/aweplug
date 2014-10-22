@@ -7,10 +7,11 @@ module Aweplug
     # Public, returns a default cache based on the profile being run.
     #
     # site        - Awestruct Site
-    # default_ttl - Time in seconds for the default ttl for the cache
+    # default_ttl - Time in seconds for the default ttl for the cache, 
+    #               defaults to six hours.
     #
     # Returns the cache for the profile.
-    def self.default site, default_ttl = 360 
+    def self.default site, default_ttl = 21600
       if (site.profile =~ /development/)
         @@cache ||= Aweplug::Cache::DaybreakCache.new 
       else
