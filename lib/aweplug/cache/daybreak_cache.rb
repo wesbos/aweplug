@@ -1,5 +1,6 @@
 require 'daybreak'
 require 'fileutils'
+require 'faraday'
 
 module Aweplug
   module Cache
@@ -55,6 +56,9 @@ module Aweplug
       # Returns the data just saved.
       def write(key, value)
         key.freeze if key.is_a? String
+
+        # We don't want to cache errors
+        return if value.is_a?(Faraday::Response) && !value.success?
 
         @daybreak.synchronize do
           if @daybreak.key? key

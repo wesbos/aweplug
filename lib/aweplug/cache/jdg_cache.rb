@@ -1,5 +1,6 @@
 require 'aweplug/helpers/faraday'
 require 'digest/sha1'
+require 'faraday'
 
 module Aweplug
   module Cache
@@ -76,6 +77,9 @@ module Aweplug
       def write(key, value, opts = {})
         _key = Digest::SHA1.hexdigest key
         ttl = opts[:ttl] || @default_ttl
+ 
+        # We don't want to cache errors
+        return if value.is_a?(Faraday::Response) && !value.success?
 
         if (value.is_a?(Faraday::Response) && !value.headers['expires'].nil?)
           resp_ttl = DateTime.parse(value.headers['expires']).to_time.to_i - Time.now.to_i
