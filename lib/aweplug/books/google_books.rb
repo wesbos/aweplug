@@ -69,7 +69,19 @@ module Aweplug
               puts ">1 books found for #{data['isbn']}"
             end
           else
-            puts "No results found for isbn: #{data['isbn']}"
+            puts "No results found for isbn: #{data['isbn']}, attempting to use spreadsheet info"
+            book = {'volumeInfo' => {'authors' => (data['authors'].nil?) ? [] : data['authors'].split(','),
+                                     'publishedDate' => data['published_date'],
+                                     'description' => data['description'],
+                                     'title' => data['title'],
+                                     'volumeLink' => data['book_url'],
+                                     'categories' => (data['categories'].nil?) ? [] : data['categories'].split(','),
+                                     'webReaderLink' => data['web_reader_url'],
+                                     'previewLink' => data['preview_url'],
+                                     'infoLink' => data['book_url'],
+                                     'publisher' => data['publisher'],
+                                     'averageRating' => data['average_rating']
+            }}
           end
           unless book.nil?
             isbn = isbn_13(book) || data['isbn']
