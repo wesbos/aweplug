@@ -93,7 +93,7 @@ module Aweplug
         @conn.put do |req|
           req.url "/rest/jbossdeveloper/#{@profile}_#{_key}"
           req.headers['Content-Type'] = opts[:content_type] || 'application/ruby+object'
-          req.headers['timeToLive'] = ttl.to_s # need to see if we're actually a request and full from that
+          req.headers['timeToLiveSeconds'] = ttl.to_s # need to see if we're actually a request and full from that
           req.body = _value
         end
       end
