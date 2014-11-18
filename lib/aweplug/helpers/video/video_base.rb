@@ -45,9 +45,10 @@ module Aweplug
           if d
             i = 0
             max_length = 150
-            d.scan(/[^\.!?]+[\.!?]/).map(&:strip).each do |s|
+            d.scan(/[^\.!?]+[\.!?]\s/).map(&:strip).each do |s|
               i += s.length
               if i > max_length
+                out = s[0..max_length]
                 break
               else
                 out += s
@@ -56,6 +57,7 @@ module Aweplug
             # Deal with the case that the description has no sentence end in it
             out = out.empty? ? d : out
           end
+          out = out.gsub("\n", ' ')[0..150]
           out
         end
 
