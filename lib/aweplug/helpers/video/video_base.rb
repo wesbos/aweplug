@@ -55,7 +55,7 @@ module Aweplug
               end
             end
             # Deal with the case that the description has no sentence end in it
-            out = out.empty? ? d : out
+            out = (out.empty? || out.length < 60) ? d : out
           end
           out = out.gsub("\n", ' ')[0..150]
           out
