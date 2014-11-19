@@ -25,6 +25,7 @@ module Aweplug
               out << s
             end
           end
+          out = self[0..max] if out.length < 60
           out
         end
 
