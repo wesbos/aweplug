@@ -25,6 +25,7 @@ module Aweplug
               out << s
             end
           end
+          out = self[0..max] if out.length < 60
           out
         end
 
@@ -70,19 +71,22 @@ module Aweplug
             end
           else
             puts "No results found for isbn: #{data['isbn']}, attempting to use spreadsheet info"
-            book = {'volumeInfo' => {'authors' => (data['authors'].nil?) ? [] : data['authors'].split(','),
-                                     'publishedDate' => data['published_date'],
-                                     'description' => data['description'],
-                                     'title' => data['title'],
-                                     'volumeLink' => data['book_url'],
-                                     'categories' => (data['categories'].nil?) ? [] : data['categories'].split(','),
-                                     'webReaderLink' => data['web_reader_url'],
-                                     'previewLink' => data['preview_url'],
-                                     'infoLink' => data['book_url'],
-                                     'publisher' => data['publisher'],
-                                     'averageRating' => data['average_rating']
-            }}
+            book = book_data_from_spreadsheet(data)
           end
+
+          # Use defaults we have from the spreadsheet
+          book['volumeInfo'].merge!((book_data_from_spreadsheet data)['volumeInfo']) { |key, v1, v2| (v2.nil? || v2.empty?) ? v1 : v2 }
+
+          book['volumeInfo'].keep_if {|key, value| !value.nil?}
+
+          # test for required elements
+          required_keys = ['title', 'authors', 'publishedDate', 'description', 'previewLink']
+          unless required_keys.all? {|key| book['volumeInfo'].key? key}
+            isbn = isbn_13(book) || data['isbn']
+            puts "book: #{isbn} missing required attributes: #{required_keys - book['volumeInfo'].keys}"
+            return nil 
+          end
+
           unless book.nil?
             isbn = isbn_13(book) || data['isbn']
             if !data['thumbnail_url'].nil? && !data['thumbnail_url'].empty?
@@ -91,7 +95,8 @@ module Aweplug
               thumbnail = book['volumeInfo']['imageLinks']['thumbnail']
             else
               thumbnail = cdn("#{@site.base_url}/images/books/book_noimageavailable.jpg")
-            end
+            end 
+
             normalized_authors = book['volumeInfo'].has_key?('authors') ? book['volumeInfo']['authors'].collect { |a| normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', a, @searchisko } : []
             unless book['volumeInfo']['publishedDate'].nil?
               if m = book['volumeInfo']['publishedDate'].match(/^(\d{4})([-|\/](\d{1,2})([-|\/](\d{1,2}))?)?$/)
@@ -137,6 +142,22 @@ module Aweplug
       end
 
       private
+
+      def book_data_from_spreadsheet data
+        {'volumeInfo' => {'authors' => (data['authors'].nil?) ? [] : data['authors'].split(','),
+                                 'publishedDate' => data['published_date'],
+                                 'description' => data['description'],
+                                 'title' => data['title'],
+                                 'volumeLink' => data['book_url'],
+                                 'categories' => (data['categories'].nil?) ? [] : data['categories'].split(','),
+                                 'webReaderLink' => data['web_reader_url'],
+                                 'previewLink' => data['preview_url'],
+                                 'infoLink' => data['book_url'],
+                                 'publisher' => data['publisher'],
+                                 'averageRating' => data['average_rating']
+        }}
+
+      end
 
       def isbn_13 book
         if book['volumeInfo'].has_key?('industryIdentifiers')
