@@ -9,10 +9,13 @@ module Aweplug
             when 'jboss.org'
               # No-op
             when 'google.com'
-              account['service'] = 'google-plus'
-              account['url'] = "http://plus.google.com/+#{account['username']}"
-              account['icon'] = 'fa-google-plus'
-              res[account['service']] = account
+              # Only add the G+ account if the 'link' is available, otherwise there's nothing to show
+              if account['link']
+                account['service'] = 'google-plus'
+                account['url'] = account['link']
+                account['icon'] = 'fa-google-plus'
+                res[account['service']] = account
+              end
             else
               default account do |a|
                 res[a['service']] = a
