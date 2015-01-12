@@ -1,6 +1,6 @@
 require 'nokogiri'
 require 'aweplug/helpers/cdn'
-
+require 'awestruct/util/exception_helper' 
 
 module Aweplug
   # Public: Awestruct transformers to modify pages after generation.
@@ -15,9 +15,15 @@ module Aweplug
           altered = false
           doc.css('img').each do |img|
             src = img['src'] 
-            unless src.start_with? site.cdn_http_base
-              img['src'] = resource.path(src)
-              altered = true
+            begin
+              unless src.nil? || src.start_with?(site.cdn_http_base)
+                img['src'] = resource.path(src)
+                altered = true
+              end
+            rescue Exception => e
+              Awestruct::ExceptionHelper.log_message "Error cdn-ifying img #{img}"
+              Awestruct::ExceptionHelper.log_building_error e, page.source_path
+              Awestruct::ExceptionHelper.html_error_report e, page.source_path
             end
           end
           content = doc.to_html if altered

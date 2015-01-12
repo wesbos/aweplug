@@ -32,12 +32,12 @@ Gem::Specification.new do |gem|
   #gem.add_dependency 'rugged', '~> 0.19'
   gem.add_dependency 'parallel', '> 1.0.0'
   gem.add_dependency 'xml-simple', '~> 1.1'
+  gem.add_dependency 'google-api-client', '~> 0.7'
+  gem.add_dependency 'ruby-duration', '3.1'
+  gem.add_dependency 'kramdown', '~> 1.0.2'
 
   gem.add_development_dependency 'guard-rspec', '~> 3.0.0'
   gem.add_development_dependency 'rake', '~> 10.0.4'
   gem.add_development_dependency 'pry', '~> 0.9.12'
-  gem.add_development_dependency 'kramdown', '~> 1.0.2'
   gem.add_development_dependency 'awestruct', '~> 0.5.5'
-  gem.add_development_dependency 'google-api-client', '~> 0.7'
-  gem.add_development_dependency 'ruby-duration', '~>3.1'
 end

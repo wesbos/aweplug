@@ -18,7 +18,6 @@ module Aweplug
         faraday.basic_auth ENV['strata_username'], ENV['strata_password']
 
         response = faraday.get URI.escape('/rs/search'), search_opts, {Accept: 'application/json'}
-        binding.pry
         if response.success?
           results = JSON.load response.body
 
