@@ -7,6 +7,7 @@ require 'aweplug/helpers/searchisko'
 require 'yaml'
 require 'aweplug/handlers/synthetic_handler'
 require 'awestruct/page'
+require 'awestruct/util/exception_helper'
 require 'awestruct/handlers/layout_handler'
 require 'awestruct/handlers/tilt_handler'
 require 'parallel'
@@ -92,7 +93,12 @@ module Aweplug
           if demos
             Parallel.each(demos, :in_threads => (site.build_threads || 0)) do |url|
               next if @excludes.include?(url)
-              build(url, site, ids)
+              begin
+                build(url, site, ids)
+              rescue Exception => e
+                Awestruct::ExceptionHelper.log_message "Error building demo from #{url}"
+                Awestruct::ExceptionHelper.log_building_error e, '' # We don't have a page source for this
+              end
             end
           end
         end
@@ -102,10 +108,10 @@ module Aweplug
         def build url, site, ids = []
           init_faraday(site)
           # Load the demo definition
-          if url =~ GITHUB_REPO
-            metadata = from_github({:github_org => $2, :github_repo => $3})
-          elsif url =~ GITHUB_YAML
+          if url =~ GITHUB_YAML
             metadata = from_yaml("https://raw.githubusercontent.com/#{$2}".gsub('/blob', ''))
+          elsif url=~ GITHUB_REPO
+            metadata = from_github({:github_org => $2, :github_repo => $3})
           else
             # We load the definition from the YAML file specified
             metadata = from_yaml(url)
