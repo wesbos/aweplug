@@ -35,13 +35,39 @@ module Aweplug
       end
 
       def add_video(url, site, product: nil, push_to_searchisko: true)
-        @youtube ||= Aweplug::Helpers::Video::YouTube.new(site)
-        @vimeo ||= Aweplug::Helpers::Video::Vimeo.new(site)
-        videos = []
-        videos << @vimeo.add(url, product: product, push_to_searchisko: push_to_searchisko)
-        videos << @youtube.add(url, product: product, push_to_searchisko: push_to_searchisko)        
-        videos = videos.flatten.reject { |v| v.nil? }
-        videos.length > 1 ? videos : videos.first
+        begin
+          uri = URI.parse url
+          uri.scheme = 'https' if uri.scheme == 'http'
+          uri_key = uri.to_s.freeze
+        rescue
+          uri_key = url.freeze
+        end
+
+        videos = site.videos || {} 
+        site.send('videos=', videos) if site.videos.nil? # we'll need this later in the process
+        binding.pry if uri_key.nil?
+        if videos[uri_key]
+          videos[uri_key].add_target_product product
+        else
+          @youtube ||= Aweplug::Helpers::Video::YouTube.new(site)
+          @vimeo ||= Aweplug::Helpers::Video::Vimeo.new(site)
+          videos[uri_key] = @vimeo.add(url, product: product, push_to_searchisko: push_to_searchisko)
+
+          youtube_videos = @youtube.add(url, product: product, push_to_searchisko: push_to_searchisko)
+          if youtube_videos
+            youtube_videos.each do |v| 
+              youtube_video_uri = URI.parse v.url
+              youtube_video_uri.scheme = 'https' if youtube_video_uri.scheme == 'http'
+              v.add_target_product product
+              videos[youtube_video_uri.to_s.freeze] = v
+            end
+          end
+          
+          videos[uri_key].add_target_product(product) if (videos[uri_key] && product)
+        end
+        videos.reject! { |k,v| v.nil? }
+        site.videos.merge! videos
+        videos[uri_key]
       end
 
     end

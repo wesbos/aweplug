@@ -11,7 +11,8 @@ module Aweplug
       class VimeoVideo < ::Aweplug::Helpers::Video::VideoBase
         include Aweplug::Helpers::SearchiskoSocial
 
-        attr_reader :duration, :id, :tags, :url, :title, :thumb_url, :cast, :modified_date, :published_date, :normalized_cast
+        attr_reader :duration, :id, :tags, :url, :title, :thumb_url, 
+                    :cast, :modified_date, :published_date, :normalized_cast, :target_product
 
         def initialize video, credits, site
           super video, site
@@ -24,6 +25,7 @@ module Aweplug
           @modified_date = DateTime.parse(@video['modified_time'])
           @published_date = DateTime.parse(@video['created_time'])
           @cast = []
+          @target_product = []
           credits.each do |c|
             name = c['name']
             if c.has_key? 'user'
@@ -48,6 +50,10 @@ module Aweplug
 
         def embed color, width, height
           %Q{<div widescreen vimeo><iframe src="//player.vimeo.com/video/#{id}?title=0&byline=0&portrait=0&badge=0&color=#{color}" width="#{width}" height="#{height}" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></div>}
+        end
+
+        def add_target_product product
+          @target_product << product
         end
 
       end

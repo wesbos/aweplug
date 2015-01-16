@@ -1,6 +1,8 @@
 require 'parallel'
 require 'aweplug/helpers/video'
+require 'aweplug/helpers/searchisko'
 require 'json'
+require 'pry'
 
 module Aweplug
   module Extensions
@@ -31,7 +33,21 @@ module Aweplug
 
       def execute site 
         Parallel.each(eval(@variable), :in_threads => (site.build_threads || 0)) do |u|
-          add_video u, site, push_to_searchisko: @push_to_searchisko
+          (add_video u, site, push_to_searchisko: @push_to_searchisko) unless u.nil?
+        end
+        unless site.profile =~ /development/
+          searchisko = Aweplug::Helpers::Searchisko.default site 
+
+          vimeo_videos = site.videos.values.find_all {|v| v.url.include? 'vimeo'}.inject({}) do |h,v| 
+            h[v.id] = v.searchisko_payload
+            h
+          end
+          youtube_videos = site.videos.values.find_all {|v| v.url.include? 'youtube'}.inject({}) do |h,v| 
+            h[v.id] = v.searchisko_payload
+            h
+          end
+          searchisko.push_bulk_content "jbossdeveloper_vimeo", vimeo_videos
+          searchisko.push_bulk_content "jbossdeveloper_youtube", youtube_videos
         end
       end
 

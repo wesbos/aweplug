@@ -20,9 +20,11 @@ module Aweplug
           @cast = contributor_exclude.include?(@video['channelTitle']) ? [] : [ { :name => @video['channelTitle'] } ]
           @normalized_cast = @cast.collect { |c| normalize('contributor_profile_by_jbossdeveloper_quickstart_author', c[:name], @searchisko) }
           @modified_date = @published_date = DateTime.parse(@video['publishedAt'])
+          @target_product = []
         end
 
-        attr_reader :url, :id, :duration, :thumb_url, :cast, :modified_date, :published_date, :normalized_cast
+        attr_reader :url, :id, :duration, :thumb_url, :cast, :modified_date, 
+                    :published_date, :normalized_cast, :target_product
 
         def provider
           'youtube'
@@ -36,6 +38,9 @@ module Aweplug
           %Q{<iframe id="ytplayer" type="text/html" width="#{width}" height="#{height}" src="//www.youtube.com/embed/#{id}?&origin=#{@site.base_url}&color=#{color}&modestbranding=1" frameborder="0"></iframe>}
         end
 
+        def add_target_product product
+          @target_product << product
+        end
       end
     end
   end
