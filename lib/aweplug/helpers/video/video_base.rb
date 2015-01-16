@@ -84,6 +84,7 @@ module Aweplug
             :sys_last_activity_date => modified_date.iso8601,
             :duration => duration.to_i,
             :thumbnail => thumb_url,
+            :target_product => target_product.flatten.compact.uniq,
             :tags => tags
           }.reject{ |k,v| v.nil? }
         end

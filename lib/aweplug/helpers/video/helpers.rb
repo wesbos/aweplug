@@ -1,5 +1,7 @@
 require 'aweplug/cache'
 require 'awestruct/util/exception_helper'
+require 'uri/https'
+# TODO: Require searchisko helper
 
 module Aweplug
   module Helpers
@@ -15,6 +17,7 @@ module Aweplug
           begin
             if !File.exists?("#{site.dir}/_partials/#{path}")
               path = Pathname.new(File.dirname(__FILE__)).join(default_snippet)
+              binding.pry if video.is_a? Hash
               page.video = video
               Tilt.new(path.to_s).render(Object.new, :page => page, :site => site)
             else
@@ -29,9 +32,15 @@ module Aweplug
         def add_video(video, product, push_to_searchisko)
           output_path = File.join 'video', video.provider, "#{video.id}.html"
           unless @site.pages.any? {|p| p.output_path == output_path}
+            binding.pry if video.is_a? Hash
             add_video_to_site video, output_path, @site
-            send_video_to_searchisko video, @site, product, push_to_searchisko, Aweplug::Cache.default(@site)
+            video.add_target_product product if product
+            # TODO: Take this out do it elsewhere
+            #send_video_to_searchisko video, @site, product, push_to_searchisko, Aweplug::Cache.default(@site)
           end
+          url = URI.parse video.url
+          url.scheme = 'https' if url.scheme == 'http'
+          @site.videos[url.to_s] = video
           video
         end
 

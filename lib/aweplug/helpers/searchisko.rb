@@ -152,6 +152,25 @@ module Aweplug
         post "/content/#{content_type}/#{content_id}", params
       end
 
+      # Public: Posts bulk content to Searchisko. See 
+      # http://docs.jbossorg.apiary.io/#post-%2Fv2%2Frest%2Fcontent%2F%7Bsys_content_type%7D
+      # for more information.
+      #
+      # content_type - String of the Searchisko sys_content_type for the content 
+      #                being posted.
+      # params       - Hash containing the content to push. Ids of each value
+      #                must be the key in the hash.
+      #
+      # Examples
+      #
+      #   searchisko.push_bulk_content 'jbossdeveloper_bom', content_hash
+      #   # => Faraday Response
+      #
+      # Returns a Faraday Response from the POST.
+      def push_bulk_content content_type, content = {}
+        post "/content/#{content_type}", content
+      end
+
       # Public: Perform an HTTP POST to Searchisko.
       #
       # path   - String containing the rest of the path.
