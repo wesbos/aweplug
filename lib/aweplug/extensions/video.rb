@@ -36,7 +36,7 @@ module Aweplug
           (add_video u, site, push_to_searchisko: @push_to_searchisko) unless u.nil?
         end
         unless site.profile =~ /development/
-          searchisko = Aweplug::Helpers::Searchisko.default site 
+          searchisko = Aweplug::Helpers::Searchisko.default site, 21600 # 6 hour default 
 
           vimeo_videos = site.videos.values.find_all {|v| v.url.include? 'vimeo'}.inject({}) do |h,v| 
             h[v.id] = v.searchisko_payload
