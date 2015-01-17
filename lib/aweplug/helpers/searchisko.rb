@@ -184,7 +184,11 @@ module Aweplug
         resp = @faraday.post do |req|
           req.url "/v1/rest/" + path
           req.headers['Content-Type'] = 'application/json'
-          req.body = params
+          unless params.is_a? String
+            req.body = params.to_json
+          else
+            req.body = params
+          end
           if @logger
             @logger.debug "request body: #{req.body}"
           end
