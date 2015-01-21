@@ -26,6 +26,7 @@ module Aweplug
           end
           builder.adapter (opts[:adapter] ||:net_http)
           builder.options.params_encoder = Faraday::FlatParamsEncoder
+          builder.use FaradayMiddleware::FollowRedirects
           builder.ssl.verify = true
         end 
         conn

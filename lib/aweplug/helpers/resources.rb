@@ -119,7 +119,11 @@ module Aweplug
         end
 
         def remote_content(src)
-          Net::HTTP.get(URI.parse(src))
+          r = Net::HTTP.get_response(URI.parse src)
+          if r.code == "301"
+            r = Net::HTTP.get_response(URI.parse(r.header['location']))
+          end
+          r.body
         end
 
       end
@@ -207,7 +211,11 @@ module Aweplug
             uri = URI.parse(src_path)
             file_ext = File.extname(uri.path)
             if uri.scheme
-              raw_content = Net::HTTP.get(uri)
+              r = Net::HTTP.get_response(uri)
+              if r.code == "301"
+                r = Net::HTTP.get_response(URI.parse(r.header['location']))
+              end
+              raw_content = r.body
               id = uri.host.gsub(/\./, '_')
             else
               # Some file paths may have query strings or fragments...

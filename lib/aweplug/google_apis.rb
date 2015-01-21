@@ -26,6 +26,7 @@ module Aweplug
           end
         end
         builder.use FaradayMiddleware::Caching, cache, {}
+        builder.use FaradayMiddleware::FollowRedirects
         builder.adapter :net_http
         builder.response :gzip
         builder.options.params_encoder = Faraday::FlatParamsEncoder
