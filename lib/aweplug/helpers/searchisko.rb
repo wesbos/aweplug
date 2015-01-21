@@ -74,6 +74,7 @@ module Aweplug
           builder.request :retry
           builder.response :raise_error if opts[:raise_error]
           builder.use FaradayMiddleware::Caching, opts[:cache], {}
+          builder.use FaradayMiddleware::FollowRedirects
           #builder.response :json, :content_type => /\bjson$/
           builder.adapter opts[:adapter] || :net_http
         end
