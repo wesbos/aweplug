@@ -1,7 +1,7 @@
 require 'aweplug/cache'
 require 'awestruct/util/exception_helper'
 require 'uri/https'
-# TODO: Require searchisko helper
+require 'aweplug/helpers/searchisko'
 
 module Aweplug
   module Helpers
@@ -17,7 +17,6 @@ module Aweplug
           begin
             if !File.exists?("#{site.dir}/_partials/#{path}")
               path = Pathname.new(File.dirname(__FILE__)).join(default_snippet)
-              binding.pry if video.is_a? Hash
               page.video = video
               Tilt.new(path.to_s).render(Object.new, :page => page, :site => site)
             else
@@ -32,14 +31,10 @@ module Aweplug
         def add_video(video, product, push_to_searchisko)
           output_path = File.join 'video', video.provider, "#{video.id}.html"
           unless @site.pages.any? {|p| p.output_path == output_path}
-            binding.pry if video.is_a? Hash
             add_video_to_site video, output_path, @site
-            video.add_target_product product if product
-            # TODO: Take this out do it elsewhere
-            #send_video_to_searchisko video, @site, product, push_to_searchisko, Aweplug::Cache.default(@site)
           end
-          url = URI.parse video.url
-          url.scheme = 'https' if url.scheme == 'http'
+          video.add_target_product product if product
+          url = convert_url_to_key URI.parse video.url
           @site.videos[url.to_s] = video
           video
         end
@@ -75,6 +70,26 @@ module Aweplug
           page.send('video=', video)
           page.send('video_url=', video.url)
           site.pages << page 
+        end
+
+        # Public: Searches for the given video, by URL in the site.
+        #
+        # Returns true if the video is already in the site
+        def site_include_video? site, url
+
+        end
+
+        # Public: Converts the url to correct form for site keys
+        #
+        # Returns the url to the site key form
+        def convert_url_to_key url
+          begin
+            uri = URI.parse url
+            uri.scheme = 'https' if uri.scheme == 'http'
+            uri.to_s.freeze
+          rescue
+            url.to_s.freeze
+          end
         end
 
       end

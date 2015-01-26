@@ -2,7 +2,6 @@ require 'parallel'
 require 'aweplug/helpers/video'
 require 'aweplug/helpers/searchisko'
 require 'json'
-require 'pry'
 
 module Aweplug
   module Extensions

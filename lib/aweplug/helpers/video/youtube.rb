@@ -61,7 +61,13 @@ module Aweplug
               ).body)
             end
             json['items'].each do |v|
-              videos << add_video(Aweplug::Helpers::Video::YouTubeVideo.new(v, @site), product, push_to_searchisko)
+              if @site.videos["https://www.youtube.com/v=#{v['id']}"]
+                video = @site.videos["https://www.youtube.com/v=#{v['id']}"]
+                video.add_target_product product
+                videos << video
+              else
+                videos << add_video(Aweplug::Helpers::Video::YouTubeVideo.new(v, @site), product, push_to_searchisko)
+              end
             end
             videos
           end

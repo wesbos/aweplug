@@ -35,17 +35,10 @@ module Aweplug
       end
 
       def add_video(url, site, product: nil, push_to_searchisko: true)
-        begin
-          uri = URI.parse url
-          uri.scheme = 'https' if uri.scheme == 'http'
-          uri_key = uri.to_s.freeze
-        rescue
-          uri_key = url.freeze
-        end
+        uri_key = convert_url_to_key URI.parse(url)
 
         videos = site.videos || {} 
         site.send('videos=', videos) if site.videos.nil? # we'll need this later in the process
-        binding.pry if uri_key.nil?
         if videos[uri_key]
           videos[uri_key].add_target_product product
         else
