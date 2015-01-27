@@ -55,7 +55,7 @@ module Aweplug
           :api_method => @books.volumes.list,
           :parameters => {
             :q => "isbn:#{data['isbn']}",
-            :country => "US"
+            :country => "SG"
           }
         )
         if res.success?
