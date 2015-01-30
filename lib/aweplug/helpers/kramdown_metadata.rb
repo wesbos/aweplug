@@ -22,7 +22,8 @@ module Kramdown
         @block_parsers.unshift :source_metadata
         @block_parsers.unshift :summary_metadata
         @block_parsers.unshift :product_metadata
-        @block_parsers.unshift :title_hack_metadata
+        @block_parsers.unshift :title_setext_hack_metadata
+        @block_parsers.unshift :title_atx_hack_metadata
         @block_parsers.unshift :pre_reqs
         @block_parsers.unshift :github_repo_url
         @block_parsers.unshift :experimental
@@ -39,7 +40,7 @@ module Kramdown
       SETEXT_HEADER_START = /^(#{OPT_SPACE}[^ \t].*?)#{HEADER_ID}[ \t]*?\n(=)+\s*?\n/
 
       # Internal: Parses the title to add to the metadata Hash.
-      def parse_title_hack_metadata 
+      def parse_title_setext_hack_metadata 
         return false if !after_block_boundary?
 
         #start_line_number = @src.current_line_number
@@ -51,10 +52,28 @@ module Kramdown
         el.attr['id'] = id if id
         
         @root.options[:metadata][:title] = text.strip # Including all of the text per DEVELOPER-1033
-        #@tree.children << el
         true
       end
-      define_parser(:title_hack_metadata, SETEXT_HEADER_START)
+      define_parser(:title_setext_hack_metadata, SETEXT_HEADER_START)
+
+      ATX_HEADER_START = /^\#\s+/
+      ATX_HEADER_MATCH = /^(\#\s+)(.+?(?:\#)?)\s*?#*#{HEADER_ID}\s*?\n/
+
+      def parse_title_atx_hack_metadata
+        return false if !after_block_boundary?
+
+        @src.check(ATX_HEADER_MATCH)
+        _, text, id = @src[1], @src[2].to_s.strip, @src[3]
+        return false if text.empty?
+
+        @src.pos += @src.matched_size
+        el = new_block_el(:header, nil, nil, :level => 1, :raw_text => text, :location => 1)
+        add_text(text, el)
+        el.attr['id'] = id if id
+        @root.options[:metadata][:title] = text.strip 
+        true
+      end
+      define_parser(:title_atx_hack_metadata, ATX_HEADER_START)
 
       # Internal: Parses the author to add to the metadata Hash.
       def parse_author_metadata
