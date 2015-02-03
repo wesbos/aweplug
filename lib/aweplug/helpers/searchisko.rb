@@ -116,7 +116,7 @@ module Aweplug
         get '/search', params
       end
 
-      # Public: Makes an HTTP GET to host/v1/rest/#{path} and returns the 
+      # Public: Makes an HTTP GET to host/v2/rest/#{path} and returns the 
       # result from the Faraday request.
       #
       # path   - String containing the rest of the path.
@@ -129,7 +129,7 @@ module Aweplug
       #
       # Returns the Faraday Response for the request.
       def get path, params = {}
-        response = @faraday.get URI.escape("/v1/rest/" + path), params
+        response = @faraday.get URI.escape("/v2/rest/" + path), params
         unless response.success?
           $LOG.warn "Error making searchisko request to #{path}. Status: #{response.status}. Params: #{params}" if $LOG.warn?
         end
@@ -183,7 +183,7 @@ module Aweplug
       #   # => Faraday Response
       def post path, params = {}
         resp = @faraday.post do |req|
-          req.url "/v1/rest/" + path
+          req.url "/v2/rest/" + path
           req.headers['Content-Type'] = 'application/json'
           unless params.is_a? String
             req.body = params.to_json
