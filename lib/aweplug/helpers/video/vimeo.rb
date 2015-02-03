@@ -33,7 +33,7 @@ module Aweplug
             builder.request :url_encoded
             builder.request :retry
             builder.response :gzip
-            builder.request :authorization, 'bearer', ENV['vimeo_access_token']
+            builder.authorization 'bearer', ENV['vimeo_access_token']
             builder.use FaradayMiddleware::FollowRedirects
             builder.use FaradayMiddleware::Caching, cache, {}
             builder.adapter adapter || :net_http
