@@ -72,6 +72,7 @@ module Aweplug
       class Resource
 
         @@cache = {}
+        @@mutex = Mutex.new
 
         def initialize(site)
           @site = site
@@ -79,22 +80,25 @@ module Aweplug
 
         def resources(id, src)
           if @site.cdn_http_base
-            if @@cache.key? src
-              @@cache[src]
-            else
-              content = ""
-              @@cache[src] = ""
-              items(src).each do |i|
-                if i =~ Resources::local_path_pattern(@site.base_url)
-                  content << local_content($1)
-                elsif URI.parse(i).scheme
-                  content << remote_content(i)
+            @@mutex.synchronize do
+              if @@cache.key?(src)
+                @@cache[src]
+              else
+                content = ""
+                @@cache[src] = ""
+                items(src).each do |i|
+                  if i =~ Resources::local_path_pattern(@site.base_url)
+                    content << local_content($1)
+                  elsif URI.parse(i).scheme
+                    content << remote_content(i)
+                  end
                 end
-              end
-              if !content.empty?
-                file_ext = ext
-                cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @site.cdn_out_dir, @site.cdn_version).add(id, file_ext, Content.new(content, @site.minify, file_ext))
-                @@cache[src] << tag("#{@site.cdn_http_base}/#{cdn_file_path}")
+                if !content.empty?
+                  file_ext = ext
+                  cdn_file_path = Aweplug::Helpers::CDN.new(ctx_path, @site.cdn_out_dir, @site.cdn_version).add(id, file_ext, Content.new(content, @site.minify, file_ext))
+                  @@cache[src] << tag("#{@site.cdn_http_base}/#{cdn_file_path}")
+                end
+                @@cache[src]
               end
             end
           else
