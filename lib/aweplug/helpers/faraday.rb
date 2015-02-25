@@ -20,7 +20,7 @@ module Aweplug
         logger = opts[:logger] || Logger.new('_tmp/faraday.log', 'daily')
 
         conn = Faraday.new(url: url) do |builder|
-          builder.response :logger, @logger = logger
+          builder.response :logger, logger
           unless opts[:no_cache]
             builder.use FaradayMiddleware::Caching, (opts[:cache] || Aweplug::Cache::FileCache.new), {} 
           end
