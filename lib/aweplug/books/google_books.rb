@@ -52,12 +52,12 @@ module Aweplug
 
       def get data
         if (data['pull_from_google'] == 'Yes')
+          env_param = {
+              :q => "isbn:#{data['isbn']}"}
+          env_param.merge!(:country => ENV['COUNTRY_CODE']) if ENV['COUNTRY_CODE']
           res = @client.execute!(
-            :api_method => @books.volumes.list,
-            :parameters => {
-              :q => "isbn:#{data['isbn']}",
-              :country => "SG"
-            }
+              :api_method => @books.volumes.list,
+              :parameters => env_param
           )
           if res.success?
             books = JSON.load(res.body)
