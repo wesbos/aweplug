@@ -185,6 +185,7 @@ module Aweplug
             end
             builder.request :url_encoded
             builder.request :retry
+            builder.headers['Authorization'] = 'token ' + ENV['github_token']
             builder.use FaradayMiddleware::Caching, @cache, {}
             builder.use FaradayMiddleware::FollowRedirects, limit: 3
             builder.adapter Faraday.default_adapter 

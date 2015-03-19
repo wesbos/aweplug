@@ -51,86 +51,90 @@ module Aweplug
       end
 
       def get data
-        res = @client.execute!(
-          :api_method => @books.volumes.list,
-          :parameters => {
-            :q => "isbn:#{data['isbn']}",
-            :country => "SG"
-          }
-        )
-        if res.success?
-          books = JSON.load(res.body)
-          if books['totalItems'] == 1
-            book = books['items'][0]
-          elsif books['totalItems'] > 1
-            # See if only one of the books has the correct ISBN_13
-            possibles = books['items'].find_all { |b| isbn_13(b) == data['isbn'] }
-            if possibles.length == 1
-              book = possibles.first
+        if (data['pull_from_google'] == 'Yes')
+          env_param = {
+              :q => "isbn:#{data['isbn']}"}
+          env_param.merge!(:country => ENV['COUNTRY_CODE']) if ENV['COUNTRY_CODE']
+          res = @client.execute!(
+              :api_method => @books.volumes.list,
+              :parameters => env_param
+          )
+          if res.success?
+            books = JSON.load(res.body)
+            if books['totalItems'] == 1
+              book = books['items'][0]
+            elsif books['totalItems'] > 1
+              # See if only one of the books has the correct ISBN_13
+              possibles = books['items'].find_all { |b| isbn_13(b) == data['isbn'] }
+              if possibles.length == 1
+                book = possibles.first
+              else
+                puts ">1 books found for #{data['isbn']}"
+              end
             else
-              puts ">1 books found for #{data['isbn']}"
+              puts "No results found for isbn: #{data['isbn']}, attempting to use spreadsheet info"
+              book = book_data_from_spreadsheet(data)
             end
           else
-            puts "No results found for isbn: #{data['isbn']}, attempting to use spreadsheet info"
-            book = book_data_from_spreadsheet(data)
+            puts "#{res.status} loading isbn: #{data['isbn']}"
+          end
+        else # Don't pull from Google
+          book = book_data_from_spreadsheet(data)
+        end
+
+        # Use defaults we have from the spreadsheet
+        book['volumeInfo'].merge!((book_data_from_spreadsheet data)['volumeInfo']) { |key, v1, v2| (v2.nil? || v2.empty?) ? v1 : v2 }
+
+        book['volumeInfo'].keep_if {|key, value| !value.nil?}
+
+        # test for required elements
+        required_keys = ['title', 'authors', 'publishedDate', 'description', 'previewLink']
+        unless required_keys.all? {|key| book['volumeInfo'].key? key}
+          isbn = isbn_13(book) || data['isbn']
+          puts "book: #{isbn} missing required attributes: #{required_keys - book['volumeInfo'].keys}"
+          return nil
+        end
+
+        unless book.nil?
+          isbn = isbn_13(book) || data['isbn']
+          if !data['thumbnail_url'].nil? && !data['thumbnail_url'].empty?
+            thumbnail = data['thumbnail_url']
+          elsif book['volumeInfo'].has_key? 'imageLinks'
+            thumbnail = book['volumeInfo']['imageLinks']['thumbnail']
+          else
+            thumbnail = cdn("#{@site.base_url}/images/books/book_noimageavailable.jpg")
           end
 
-          # Use defaults we have from the spreadsheet
-          book['volumeInfo'].merge!((book_data_from_spreadsheet data)['volumeInfo']) { |key, v1, v2| (v2.nil? || v2.empty?) ? v1 : v2 }
-
-          book['volumeInfo'].keep_if {|key, value| !value.nil?}
-
-          # test for required elements
-          required_keys = ['title', 'authors', 'publishedDate', 'description', 'previewLink']
-          unless required_keys.all? {|key| book['volumeInfo'].key? key}
-            isbn = isbn_13(book) || data['isbn']
-            puts "book: #{isbn} missing required attributes: #{required_keys - book['volumeInfo'].keys}"
-            return nil 
-          end
-
-          unless book.nil?
-            isbn = isbn_13(book) || data['isbn']
-            if !data['thumbnail_url'].nil? && !data['thumbnail_url'].empty?
-              thumbnail = data['thumbnail_url']
-            elsif book['volumeInfo'].has_key? 'imageLinks'
-              thumbnail = book['volumeInfo']['imageLinks']['thumbnail']
-            else
-              thumbnail = cdn("#{@site.base_url}/images/books/book_noimageavailable.jpg")
-            end 
-
-            normalized_authors = book['volumeInfo'].has_key?('authors') ? book['volumeInfo']['authors'].collect { |a| normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', a, @searchisko } : []
-            unless book['volumeInfo']['publishedDate'].nil?
-              if m = book['volumeInfo']['publishedDate'].match(/^(\d{4})([-|\/](\d{1,2})([-|\/](\d{1,2}))?)?$/)
-                if !m[5].nil?
-                  published = DateTime.new(m[1].to_i, m[3].to_i, m[5].to_i)
-                elsif !m[3].nil?
-                  published = DateTime.new(m[1].to_i, m[3].to_i)
-                else
-                  published = DateTime.new(m[1].to_i)
-                end
+          normalized_authors = book['volumeInfo'].has_key?('authors') ? book['volumeInfo']['authors'].collect { |a| normalize 'contributor_profile_by_jbossdeveloper_quickstart_author', a, @searchisko } : []
+          unless book['volumeInfo']['publishedDate'].nil?
+            if m = book['volumeInfo']['publishedDate'].match(/^(\d{4})([-|\/](\d{1,2})([-|\/](\d{1,2}))?)?$/)
+              if !m[5].nil?
+                published = DateTime.new(m[1].to_i, m[3].to_i, m[5].to_i)
+              elsif !m[3].nil?
+                published = DateTime.new(m[1].to_i, m[3].to_i)
+              else
+                published = DateTime.new(m[1].to_i)
               end
             end
-            description = book['volumeInfo']['description'].truncate(max: 500) if book['volumeInfo']['description']
-            {
-              :sys_title => book['volumeInfo']['title'],
-              :sys_description => description,
-              :sys_url_view => book['volumeInfo']['canonicalVolumeLink'],
-              :authors => book['volumeInfo']['authors'],
-              :thumbnail => thumbnail.to_s,
-              :isbn => isbn,
-              :tags => book['volumeInfo']['categories'],
-              :web_reader_link => book['volumeInfo']['webReadLink'],
-              :preview_link => book['volumeInfo']['previewLink'],
-              :info_link => book['volumeInfo']['infoLink'],
-              :publisher => book['volumeInfo']['publisher'],
-              :sys_content => book['volumeInfo']['description'],
-              :sys_created => published,
-              :normalized_authors => normalized_authors,
-              :average_rating => book['volumeInfo']['averageRating']
-            }
           end
-        else
-          puts "#{res.status} loading isbn: #{data['isbn']}"
+          description = book['volumeInfo']['description'].truncate(max: 500) if book['volumeInfo']['description']
+          {
+            :sys_title => book['volumeInfo']['title'],
+            :sys_description => description,
+            :sys_url_view => book['volumeInfo']['canonicalVolumeLink'],
+            :authors => book['volumeInfo']['authors'],
+            :thumbnail => thumbnail.to_s,
+            :isbn => isbn,
+            :tags => book['volumeInfo']['categories'],
+            :web_reader_link => book['volumeInfo']['webReadLink'],
+            :preview_link => book['volumeInfo']['previewLink'],
+            :info_link => book['volumeInfo']['infoLink'],
+            :publisher => book['volumeInfo']['publisher'],
+            :sys_content => book['volumeInfo']['description'],
+            :sys_created => published,
+            :normalized_authors => normalized_authors,
+            :average_rating => book['volumeInfo']['averageRating']
+          }
         end
       end
 
