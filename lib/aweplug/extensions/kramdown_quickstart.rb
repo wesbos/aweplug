@@ -157,8 +157,14 @@ module Aweplug
             :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
             :target_product => metadata[:target_product],
             :github_repo_url => metadata[:github_repo_url],
-            :experimental => metadata[:experimental]
-          } 
+            :experimental => metadata[:experimental],
+            :prerequisites => metadata[:prereq],
+            :quickstart_id => metadata[:folder_name],
+            :git_tag => metadata[:current_tag],
+            :git_commit => metadata[:commits].collect { |c| c[:hash] }.first,
+            :git_download => metadata[:download]
+              
+          }
 
           searchisko.push_content(metadata[:searchisko_type], 
                                     metadata[:searchisko_id], 
@@ -217,6 +223,7 @@ module Aweplug
           metadata[:product] = @product if @product
           metadata[:experimental] = @experimental
           metadata[:published] = DateTime.parse(metadata[:commits].first[:date]) unless metadata[:commits].empty?
+          metadata[:folder_name] = File.split(File.dirname(file)).last
           unless metadata[:current_branch] == 'HEAD'
             git_ref = metadata[:current_branch]
           else
