@@ -155,7 +155,7 @@ module Aweplug
             :author => metadata[:author],
             :sys_created => metadata[:commits].collect { |c| DateTime.parse c[:date] }.last,
             :sys_activity_dates => metadata[:commits].collect { |c| DateTime.parse c[:date] },
-            :target_product => metadata[:target_product],
+            :target_product => @product,
             :github_repo_url => metadata[:github_repo_url],
             :experimental => metadata[:experimental],
             :prerequisites => metadata[:prereq],
