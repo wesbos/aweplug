@@ -58,7 +58,6 @@ module Aweplug
           
           videos[uri_key].add_target_product(product) if (videos[uri_key] && product)
         end
-        videos.reject! { |k,v| v.nil? }
         site.videos.merge! videos
         videos[uri_key]
       end

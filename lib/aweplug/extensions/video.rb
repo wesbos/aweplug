@@ -34,6 +34,7 @@ module Aweplug
         Parallel.each(eval(@variable), :in_threads => (site.build_threads || 0)) do |u|
           (add_video u, site, push_to_searchisko: @push_to_searchisko) unless u.nil?
         end
+        site.videos.reject! { |k,v| v.nil? }
         unless site.profile =~ /development/
           searchisko = Aweplug::Helpers::Searchisko.default site, 21600 # 6 hour default 
 
