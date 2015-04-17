@@ -12,7 +12,7 @@ module Aweplug
     #
     # Returns the cache for the profile.
     def self.default site, default_ttl = 21600
-      if (site.profile =~ /development/)
+      if (site.cache_type == :local)
         @@cache ||= Aweplug::Cache::DaybreakCache.new 
       else
         @@cache ||= Aweplug::Cache::JDGCache.new(site.profile, ENV['cache_url'], ENV['cache_user'], ENV['cache_password'], default_ttl)
