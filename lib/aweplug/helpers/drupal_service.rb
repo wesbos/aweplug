@@ -36,11 +36,11 @@ module Aweplug
         @token = token opts[:drupal_user], opts[:drupal_password]
       end
 
-      def send_page page
+      def send_page page, content
         path = page.output_path.chomp('index.html').gsub('/', '')
         payload = {:title => (page.title || page.site.title || path),
                    :type => "awestruct_page",
-                   :body => {:und => [{:value => page.rendered_content, 
+                   :body => {:und => [{:value => content, 
                                        :summary => page.description,
                                        :format => "full_html"}]},
                    :field_output_path => {:und => [{:value => page.output_path.chomp('index.html')}]}
