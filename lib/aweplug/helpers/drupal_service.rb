@@ -37,13 +37,15 @@ module Aweplug
       end
 
       def send_page page, content
-        path = page.output_path.chomp('index.html').gsub('/', '')
-        payload = {:title => (page.title || page.site.title || path),
+        path = page.output_path.chomp('/index.html')
+        path = path[1..-1] if path.starts_with? '/'
+        payload = {:title => (page.title || page.site.title || path.gsub('/', '')),
                    :type => "awestruct_page",
                    :body => {:und => [{:value => content, 
                                        :summary => page.description,
                                        :format => "full_html"}]},
-                   :field_output_path => {:und => [{:value => page.output_path.chomp('index.html')}]}
+                   :field_output_path => {:und => [{:value => path}]},
+                   :path => {:alias => path}
                   }
 
         # TODO: cache this so we know to update or create
