@@ -218,9 +218,19 @@ module Aweplug
           metadata[:github_repo_url] ||= "http://github.com/#{metadata[:github_org]}/#{metadata[:github_repo]}"
           if metadata[:content].nil?
             metadata[:content] ||= "https://api.github.com/repos/#{metadata[:github_org]}/#{metadata[:github_repo]}/readme"
-            raw = Base64.decode64(JSON.load(@faraday.get(metadata[:content]).body)['content'])
+            request = @faraday.get(metadata[:content])
+            if !request.success?
+              raise metadata[:content] + " must return valid JSON to decode."
+            else 
+              raw = Base64.decode64(JSON.load(request.body)['content'])
+            end
           else
-            raw = @faraday.get(metadata[:content]).body
+            request = @faraday.get(metadata[:content])
+            if !request.success?
+              raise metadata[:content] + " returned with a status of " + request.status.to_s
+            else
+              raw = request.body
+            end
           end
           metadata = extract_metadata(raw).merge(metadata)
           unless metadata.has_key?(:download) || metadata.has_key?(:published) || metadata.has_key?(:browse)
