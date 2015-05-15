@@ -3,6 +3,7 @@ require 'aweplug/helpers/searchisko_social'
 require 'aweplug/helpers/searchisko'
 require 'ostruct'
 require 'duration'
+require 'active_support'
 
 module Aweplug
   module Helpers

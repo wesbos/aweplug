@@ -33,7 +33,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'parallel', '> 1.0.0'
   gem.add_dependency 'xml-simple', '~> 1.1'
   gem.add_dependency 'google-api-client', '~> 0.7'
-  gem.add_dependency 'ruby-duration', '3.1'
+  gem.add_dependency 'ruby-duration', '~> 3.2'
   gem.add_dependency 'kramdown', '~> 1.0.2'
 
   gem.add_development_dependency 'guard-rspec', '~> 3.0.0'

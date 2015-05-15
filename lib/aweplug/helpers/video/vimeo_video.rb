@@ -2,6 +2,7 @@ require 'aweplug/helpers/video/video_base'
 require 'aweplug/helpers/searchisko_social'
 require 'aweplug/helpers/searchisko'
 require 'duration'
+require 'active_support'
 require 'ostruct'
 
 module Aweplug
