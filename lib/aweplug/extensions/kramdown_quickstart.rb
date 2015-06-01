@@ -230,7 +230,7 @@ module Aweplug
             git_ref = metadata[:current_tag] || 'HEAD'
           end
           metadata[:download] = "#{metadata[:github_repo_url]}/archive/#{git_ref}.zip"
-          metadata[:browse] = "#{metadata[:github_repo_url]}/tree/#{git_ref}"
+          metadata[:browse] = "#{metadata[:github_repo_url]}/blob/#{metadata[:commits].first[:hash]}/#{metadata[:folder_name]}"
           metadata[:scm] = 'github'
           metadata
         end
