@@ -5,6 +5,7 @@ require 'faraday'
 require 'faraday_middleware' 
 require 'logger'
 require 'aweplug/cache'
+require 'aweplug/middleware/statuslogger'
 
 module Aweplug
   module Helpers
@@ -123,6 +124,7 @@ module Aweplug
           end
           builder.request :url_encoded
           builder.request :retry
+          builder.use Aweplug::Middleware::StatusLogger 
           builder.response :raise_error if raise_error
           builder.use FaradayMiddleware::FollowRedirects
           builder.use FaradayMiddleware::Caching, Aweplug::Cache.default(site), {}

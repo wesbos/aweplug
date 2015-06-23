@@ -17,6 +17,7 @@ require 'base64'
 require 'nokogiri'
 require 'aweplug/helpers/searchisko_social'
 require 'aweplug/cache'
+require 'aweplug/middleware/statuslogger'
 
 
 
@@ -186,6 +187,7 @@ module Aweplug
             builder.request :url_encoded
             builder.request :retry
             builder.headers['Authorization'] = 'token ' + ENV['github_token']
+            builder.use Aweplug::Middleware::StatusLogger 
             builder.use FaradayMiddleware::Caching, @cache, {}
             builder.use FaradayMiddleware::FollowRedirects, limit: 3
             builder.adapter Faraday.default_adapter 

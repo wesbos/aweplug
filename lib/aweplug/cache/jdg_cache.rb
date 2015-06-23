@@ -37,6 +37,7 @@ module Aweplug
         @profile = profile
         @memory_store = {}
         @conn = Aweplug::Helpers::FaradayHelper.default(uri, {:no_cache => true})
+        @conn.builder.delete(Aweplug::Middleware::StatusLogger) #remove response status checking since data not in the cache isn't necessarily an error.
         @conn.basic_auth username, password
         @default_ttl = default_ttl
       end

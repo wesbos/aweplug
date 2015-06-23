@@ -4,6 +4,7 @@ require 'aweplug/cache'
 require 'logger'
 require 'json'
 require 'uri'
+require 'aweplug/middleware/statuslogger'
 
 # WARNING: monkey patching faraday
 # TODO: See if we can get the new refinements to work
@@ -73,6 +74,7 @@ module Aweplug
           builder.request :url_encoded
           builder.request :retry
           builder.response :raise_error if opts[:raise_error]
+          builder.use Aweplug::Middleware::StatusLogger
           builder.use FaradayMiddleware::Caching, opts[:cache], {}
           builder.use FaradayMiddleware::FollowRedirects
           #builder.response :json, :content_type => /\bjson$/

@@ -2,6 +2,7 @@ require 'google/api_client'
 require 'aweplug/cache'
 require 'faraday'
 require 'faraday_middleware'
+require 'aweplug/middleware/statuslogger'
 
 module Aweplug
   module GoogleAPIs
@@ -28,6 +29,7 @@ module Aweplug
         builder.use FaradayMiddleware::Caching, cache, {}
         builder.use FaradayMiddleware::FollowRedirects
         builder.adapter :net_http
+        builder.use Aweplug::Middleware::StatusLogger 
         builder.response :gzip
         builder.options.params_encoder = Faraday::FlatParamsEncoder
         builder.ssl.ca_file = client.connection.ssl.ca_file
