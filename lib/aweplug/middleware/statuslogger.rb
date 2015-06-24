@@ -1,15 +1,13 @@
 module Aweplug
   module Middleware
 
+    # Public. Middleware that raises an exception on unsuccessfull returns.
+    # This potentially stops the build, unless handled further up the chain.
+    #
+    # returns an Faraday::Response containing an env hash.
     class StatusLogger < Faraday::Middleware
-      
-      # Public, returns a successful response 
-      # app - the nested middleware stack
-      # env - a hash of the request/response information 
-      #
-      # returns an Faraday::Response containing an env hash.
       def initialize(app) 
-      @app = app
+        @app = app
       end
 
       def call(env) 
