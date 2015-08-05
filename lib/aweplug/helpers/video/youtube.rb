@@ -36,7 +36,8 @@ module Aweplug
                 :api_method => @youtube.playlist_items.list,
                 :parameters => {
                   :playlistId => $4,
-                  :part => 'id, snippet'
+                  :part => 'id, snippet',
+                  :maxResults => 50
                 }
               ).body)
               json['items'].each do |v|
