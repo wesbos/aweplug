@@ -104,7 +104,7 @@ module Aweplug
           page.layout = @layout
           # TODO: Set the imagedir attribute for the page
           page.output_dir =  File.join(@output_dir, File.basename(page.output_path, File.extname(page.output_path))).downcase
-          page.output_path = File.join(page.output_dir, 'index.html')
+          page.output_path = '/' + File.join(page.output_dir, 'index.html')
 
           doc = Asciidoctor.load_file path
           metadata = {:author => doc.author, 
