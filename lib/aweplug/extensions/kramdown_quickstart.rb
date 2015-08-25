@@ -223,14 +223,17 @@ module Aweplug
           metadata[:product] = @product if @product
           metadata[:experimental] = @experimental
           metadata[:published] = DateTime.parse(metadata[:commits].first[:date]) unless metadata[:commits].empty?
-          metadata[:folder_name] = File.split(File.dirname(file)).last
+
+          folder_name = File.split(File.dirname(file)).last 
+          metadata[:folder_name] =  folder_name unless folder_name.start_with?('_')
+
           unless metadata[:current_branch] == 'HEAD'
             git_ref = metadata[:current_branch]
           else
             git_ref = metadata[:current_tag] || 'HEAD'
           end
           metadata[:download] = "#{metadata[:github_repo_url]}/archive/#{git_ref}.zip"
-          metadata[:browse] = "#{metadata[:github_repo_url]}/blob/#{metadata[:commits].first[:hash]}/#{metadata[:folder_name]}"
+          metadata[:browse] = "#{metadata[:github_repo_url]}/tree/#{metadata[:commits].first[:hash]}/#{metadata[:folder_name]}"
           metadata[:scm] = 'github'
           metadata
         end
