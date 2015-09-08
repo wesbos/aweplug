@@ -49,7 +49,7 @@ module Aweplug
                       :part => 'contentDetails'
                     }
                   ).body)
-                  v.merge!(contentDetails['items'].first)
+                  v.merge!(contentDetails['items'].first) unless contentDetails['items'].empty?
                 end
               end
             else
@@ -67,7 +67,7 @@ module Aweplug
                 video.add_target_product product
                 videos << video
               else
-                videos << add_video(Aweplug::Helpers::Video::YouTubeVideo.new(v, @site), product, push_to_searchisko)
+                videos << add_video(Aweplug::Helpers::Video::YouTubeVideo.new(v, @site), product, push_to_searchisko) if v['contentDetails']
               end
             end
             videos
