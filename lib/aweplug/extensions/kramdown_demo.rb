@@ -259,7 +259,7 @@ module Aweplug
                 metadata[:browse] = release['html_url']
               end
             else
-              metadata[:download] ||= "#{base_download_url}/archive/master.zip"
+              metadata[:download] ||= "https://github.com/#{download_org || metadata[:github_org]}/#{download_repo || metadata[:github_repo]}/archive/master.zip"
               metadata[:published] = DateTime.parse(JSON.load(@faraday.get("#{base_download_url}/commits").body).first['commit']['author']['date'])
               metadata[:browse] = metadata[:github_repo_url]
             end
