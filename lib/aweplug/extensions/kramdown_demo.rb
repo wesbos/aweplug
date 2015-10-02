@@ -119,6 +119,7 @@ module Aweplug
           end
           unless metadata.nil?
             metadata[:original_url] = url
+            metadata[:target_product] = metadata[:product]
 
             source = @faraday.get(metadata[:content]).body
 
@@ -305,7 +306,8 @@ module Aweplug
             :author => metadata[:author],
             :contributors => metadata[:contributors],
             :sys_created => metadata[:published],
-            :target_product => metadata[:target_product],
+            :target_product => metadata[:product],
+            :sys_project => metadata[:product],
             :github_repo_url => metadata[:github_repo_url],
             :experimental => metadata[:experimental],
             :thumbnail => metadata[:thumbnail],
