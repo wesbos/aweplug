@@ -119,7 +119,11 @@ module Aweplug
           end
           unless metadata.nil?
             metadata[:original_url] = url
-            metadata[:target_product] = site.products[metadata[:product]]['abbreviated_name'] if metadata[:product] 
+
+            if metadata[:product]
+              metadata[:product] = metadata[:product].split(',').map(&:strip)
+              metadata[:target_product] = metadata[:product].map {|p| site.products[p]['abbreviated_name']}
+            end
 
             source = @faraday.get(metadata[:content]).body
 
