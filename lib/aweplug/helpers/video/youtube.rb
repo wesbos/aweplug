@@ -46,7 +46,7 @@ module Aweplug
                     :api_method => @youtube.videos.list,
                     :parameters => {
                       :id => v['snippet']['resourceId']['videoId'],
-                      :part => 'contentDetails'
+                      :part => 'contentDetails,statistics,player'
                     }
                   ).body)
                   v.merge!(contentDetails['items'].first) unless contentDetails['items'].empty?
@@ -57,7 +57,7 @@ module Aweplug
                 :api_method => @youtube.videos.list,
                 :parameters => {
                   :id => $4,
-                  :part => 'snippet, contentDetails, id'
+                  :part => 'snippet,statistics,contentDetails,player'
                 }
               ).body)
             end
