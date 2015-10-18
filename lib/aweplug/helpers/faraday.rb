@@ -1,7 +1,6 @@
 require 'logger'
 require 'faraday'
 require 'faraday_middleware'
-require 'aweplug/middleware/statuslogger'
 
 module Aweplug
   module Helpers
@@ -27,7 +26,7 @@ module Aweplug
           end
           builder.adapter (opts[:adapter] ||:net_http)
           builder.options.params_encoder = Faraday::FlatParamsEncoder
-          builder.use Aweplug::Middleware::StatusLogger
+          builder.response :raise_error
           builder.use FaradayMiddleware::FollowRedirects
           builder.ssl.verify = true
         end 

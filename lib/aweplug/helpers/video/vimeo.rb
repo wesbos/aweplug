@@ -7,7 +7,6 @@ require 'tilt'
 require 'yaml'
 require 'faraday'
 require 'faraday_middleware'
-require 'aweplug/middleware/statuslogger'
 
 module Aweplug
   module Helpers
@@ -34,7 +33,7 @@ module Aweplug
             builder.request :url_encoded
             builder.request :retry
             builder.response :gzip
-            builder.use Aweplug::Middleware::StatusLogger 
+            builder.response :raise_error
             builder.authorization 'bearer', ENV['vimeo_access_token']
             builder.use FaradayMiddleware::FollowRedirects
             builder.use FaradayMiddleware::Caching, cache, {}
