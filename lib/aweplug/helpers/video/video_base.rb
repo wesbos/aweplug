@@ -98,6 +98,14 @@ module Aweplug
           {}
         end
 
+        def to_h
+          hash = {}
+          [:title, :tags, :cast, :duration, :modified_date, :published_date, :normalized_cast,
+           :height, :width, :description, :author, :detail_url, :normalized_author
+          ].each {|k| hash[k] = self.send k}
+          hash
+        end
+
       end
     end
   end

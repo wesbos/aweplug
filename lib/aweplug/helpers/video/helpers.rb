@@ -29,7 +29,7 @@ module Aweplug
         end
 
         def add_video(video, product, push_to_searchisko)
-          output_path = File.join 'video', video.provider, "#{video.id}.html"
+          output_path = File.join '/video', video.provider, "#{video.id}.html"
           unless @site.pages.any? {|p| p.output_path == output_path}
             add_video_to_site video, output_path, @site
           end

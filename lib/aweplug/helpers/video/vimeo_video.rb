@@ -57,6 +57,14 @@ module Aweplug
           @target_product << product
         end
 
+
+        def to_h
+          hash = super
+          [:duration, :id, :tags, :url, :title, :thumb_url, :provider,
+           :cast, :modified_date, :published_date, :normalized_cast, :target_product
+          ].each {|k| hash[k] = self.send k}
+          hash
+        end
       end
     end
   end
