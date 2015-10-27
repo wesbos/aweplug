@@ -22,13 +22,13 @@ module Aweplug
           @normalized_cast = @cast.collect { |c| normalize('contributor_profile_by_jbossdeveloper_quickstart_author', c[:name], @searchisko) }
           @modified_date = @published_date = DateTime.parse(@video['publishedAt'])
           @player = video['player']['embedHtml']
-          @viewCount = video['statistics']['viewCount']
-          @likeCount = video['statistics']['likeCount']
+          @view_count = video['statistics']['viewCount']
+          @like_count = video['statistics']['likeCount']
           @target_product = []
         end
 
-        attr_reader :url, :id, :duration, :thumb_url, :cast, :modified_date, 
-                    :published_date, :normalized_cast, :target_product
+        attr_reader :url, :id, :duration, :thumb_url, :cast, :modified_date,
+                    :published_date, :normalized_cast, :target_product, :view_count, :like_count
 
         def provider
           'youtube'
@@ -49,7 +49,7 @@ module Aweplug
         def to_h
           hash = super
           [:url, :id, :duration, :thumb_url, :cast, :modified_date,
-           :published_date, :normalized_cast, :target_product, :provider
+           :published_date, :normalized_cast, :target_product, :provider, :view_count, :like_count
           ].each {|k| hash[k] = self.send k}
           hash
         end

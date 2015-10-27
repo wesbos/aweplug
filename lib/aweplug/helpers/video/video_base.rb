@@ -85,7 +85,9 @@ module Aweplug
             :duration => duration.to_i,
             :thumbnail => thumb_url,
             :target_product => target_product.flatten.compact.uniq,
-            :tags => tags
+            :tags => tags,
+            :view_count => view_count,
+            :like_count => like_count
           }.reject{ |k,v| v.nil? }
         end
 
