@@ -12,8 +12,8 @@ module Aweplug
       class VimeoVideo < ::Aweplug::Helpers::Video::VideoBase
         include Aweplug::Helpers::SearchiskoSocial
 
-        attr_reader :duration, :id, :tags, :url, :title, :thumb_url, 
-                    :cast, :modified_date, :published_date, :normalized_cast, :target_product
+        attr_reader :duration, :id, :tags, :url, :title, :thumb_url,
+                    :cast, :modified_date, :published_date, :normalized_cast, :target_product, :view_count, :like_count
 
         def initialize video, credits, site
           super video, site
@@ -25,6 +25,8 @@ module Aweplug
           @thumb_url = @video['pictures'].find {|p| p['width'] == 200}['link']
           @modified_date = DateTime.parse(@video['modified_time'])
           @published_date = DateTime.parse(@video['created_time'])
+          @view_count = video['stats']['plays']
+          @like_count = video['stats']['likes']
           @cast = []
           @target_product = []
           credits.each do |c|
@@ -61,7 +63,7 @@ module Aweplug
         def to_h
           hash = super
           [:duration, :id, :tags, :url, :title, :thumb_url, :provider,
-           :cast, :modified_date, :published_date, :normalized_cast, :target_product
+           :cast, :modified_date, :published_date, :normalized_cast, :target_product, :view_count, :like_count
           ].each {|k| hash[k] = self.send k}
           hash
         end
