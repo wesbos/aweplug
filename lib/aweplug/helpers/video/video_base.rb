@@ -9,10 +9,10 @@ module Aweplug
           cache = Aweplug::Cache.default site, default_ttl
           @site = site
           @video = video
-          @searchisko = Aweplug::Helpers::Searchisko.new({:base_url => @site.dcp_base_url, 
-                                                          :authenticate => true, 
-                                                          :searchisko_username => ENV['dcp_user'], 
-                                                          :searchisko_password => ENV['dcp_password'], 
+          @searchisko = Aweplug::Helpers::Searchisko.new({:base_url => @site.dcp_base_url,
+                                                          :authenticate => true,
+                                                          :searchisko_username => ENV['dcp_user'],
+                                                          :searchisko_password => ENV['dcp_password'],
                                                           :cache => cache,
                                                           :logger => @site.log_faraday,
                                                           :searchisko_warnings => @site.searchisko_warnings})
@@ -38,13 +38,16 @@ module Aweplug
             @video[attr.to_s] || nil
           end
         end
-        
-        def description
+
+        def description(full_description=false)
+          max_length=150
           d = @video["description"]
           out = ""
           if d
+            if full_description
+              max_length = d.length
+            end
             i = 0
-            max_length = 150
             d.scan(/[^\.!?]+[\.!?]\s/).map(&:strip).each do |s|
               i += s.length
               if i > max_length
@@ -57,9 +60,11 @@ module Aweplug
             # Deal with the case that the description has no sentence end in it
             out = (out.empty? || out.length < 60) ? d : out
           end
-          out = out.gsub("\n", ' ')[0..150]
+          out = out.gsub("\n", ' ')[0..max_length]
           out
         end
+
+
 
         def detail_url
           "#{@site.base_url}/video/#{provider}/#{id}"
@@ -77,6 +82,7 @@ module Aweplug
           {
             :sys_title => title,
             :sys_description => description,
+            :full_description => description(true),
             :sys_url_view => detail_url,
             :author => author.nil? ? nil : author['username'],
             :contributors => cast.empty? ? nil : cast.collect {|c| c['username']},
